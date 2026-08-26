@@ -13,3 +13,30 @@ const DROP_ALL = `
     DROP TABLE IF EXISTS categories CASCADE; 
     DROP TABLE IF EXISTS users CASCADE; 
 `;
+
+const runMigration = async () => {
+
+    const shouldReset = process.argv.includes('--reset');
+    const schemaPath = path.join(__dirname, '..', 'sql', 'schema.sql');
+
+    try {
+
+        if(shouldReset){
+            console.log('Dropping existing tables...');
+            await pool.query(DROP_ALL);
+        }
+        console.log(`Reading schemas from ${schemaPath}`);
+        const schema = await fs.readFile(schemaPath, 'utf-8');
+
+        console.log('Running migration..');
+        await pool.query(schema);
+
+        console.log('Migration complete. Table created!');
+
+    } catch (error){
+        console.error("Migration Failed!", error.message);
+        process.exitCode = 1;
+    } finally {
+        await pool.end();
+    }
+}
