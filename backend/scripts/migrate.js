@@ -40,3 +40,5 @@ const runMigration = async () => {
         await pool.end();
     }
 }
+
+runMigration();
