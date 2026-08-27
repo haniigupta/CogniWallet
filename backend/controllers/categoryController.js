@@ -78,3 +78,24 @@ export const updateCategory = async (req, res) => {
         res.status(500).json({ message : 'Server error'})
     }
 }
+
+export const deleteCategory = async (req, res) => {
+    const { id } = req.params
+
+    try {
+
+        const result = await pool.query(
+            'DELETE FROM categories WHERE id = $1 AND user_id = $2 RETURNING id ',
+            [id, req.userId]
+        )
+        if(result.rows.length === 0){
+            return res.status(404).json({
+                message : 'Category not found'
+            })
+        }
+        res.json({ message : 'Category deleted'})
+    } catch (error){
+        console.error('deleteCategory error', error)
+        res.status(500).json({ message : 'Server error'})
+    }
+}
