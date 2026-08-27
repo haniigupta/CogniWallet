@@ -68,3 +68,50 @@ export const register = async (req , res) => {
         client.release();
     }
 }
+
+export const login = async (req, res) => {
+    const {email, password} = req.body;
+
+    if(!email || !password){
+        return res.status(400).json({
+            message: 'Email and password are required!'
+        })
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT id, name, email, password_hash, currency FROM users WHERE email = $1',
+            [email]
+        )
+
+        if(result.rows.length === 0){
+            return res.status(400).json({
+                message : "Inavlid Credentials"
+            })
+        }
+
+        const user = result.rows[0];
+        const match = await bcrypt.compare(password, user.password_hash);
+        
+        if(!match){
+            return res.status(400).json ({
+                message : 'Invaalid Credentials'
+            })
+        }
+
+        const token = signToken(user.id);
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email : user.email,
+                currency : user.currency,
+            },
+            token,
+        })
+
+    } catch(error) {
+        console.error('Login Error', error)
+        res.status(500).json({ message : 'Server error'})
+    }
+}
