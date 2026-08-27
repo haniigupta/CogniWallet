@@ -86,7 +86,7 @@ export const login = async (req, res) => {
 
         if(result.rows.length === 0){
             return res.status(400).json({
-                message : "Inavlid Credentials"
+                message : "Invalid Credentials"
             })
         }
 
@@ -95,7 +95,7 @@ export const login = async (req, res) => {
         
         if(!match){
             return res.status(400).json ({
-                message : 'Invaalid Credentials'
+                message : 'Invalid Credentials'
             })
         }
 
