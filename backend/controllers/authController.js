@@ -115,3 +115,22 @@ export const login = async (req, res) => {
         res.status(500).json({ message : 'Server error'})
     }
 }
+
+export const getMe = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, name, email, currency, created_at FROM users WHERE id = $1',
+            [req.userId]
+        )
+        if(result.rows.length === 0){
+            return res.status(404).json({
+                message: 'User not found!'
+            })
+        }
+
+        res.json(result.rows[0])
+    } catch (error){
+        console.error('GetMe error', error)
+        res.status(500).json({ message: 'Server error'})
+    }
+}
