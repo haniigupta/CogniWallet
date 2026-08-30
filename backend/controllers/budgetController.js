@@ -37,3 +37,43 @@ export const getBudgets = async (req , res )=>{
         res.status(500).json({message: 'Server error'})
     }
 }
+
+export const createBudget = async  (req, res) => {
+    const {categoryId, amount, period = 'monthly', startDate } = req.body
+
+    if(!categoryId || !amount){
+        return res.status(400).json({
+            message : 'categoryId and amount are required!'
+        })
+    }
+
+    if(!['monthly', 'weekly'].includes(period)) {
+        return res.status(400).json ({
+            message : 'Period must be monthly or weekly!'
+        })
+    }
+
+    try {
+
+        const today = new Date()
+        const monthStart = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+        const effectiveStart = startDate || monthStart
+
+        const result = await pool.query(
+            `INSERT INTO budgets (user_id, category_id, amount, period, start_date)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *`,
+            [req.userId , categoryId, amount, period , effectiveStart]
+        )
+        res.status(201).json(result.rows[0])
+
+    } catch(error){
+        if(error.code === '23505'){
+            return res.status(400).json({
+                message : 'Budget already exists for this category and period'
+            })
+        }
+        console.error('createBudget error', error)
+        res.status(500).json ({ message : 'Server error'})
+    }
+}
