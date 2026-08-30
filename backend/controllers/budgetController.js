@@ -77,3 +77,30 @@ export const createBudget = async  (req, res) => {
         res.status(500).json ({ message : 'Server error'})
     }
 }
+
+export const updateBudget = async (req, res) => {
+    const { id } = req.params;
+    const { amount, period } = req.body;
+
+
+    try {
+
+        const result = await pool.query(
+            `UPDATE budgets
+            SET amount = COALESCE($1, amount),
+                period = COALESCE($2, period)
+            WHERE id = $3 AND user_id = $4
+            RETURNING *`,
+            [amount, period , id, req.userId]
+        )
+
+        if(result.rows.length === 0){
+            return res.status(404).json({ message  : 'Budget not found'})
+        }
+        res.json(result.rows[0]
+
+    } catch(error){
+        console.error('update Budget error', error)
+        res.status(500).json({ message : 'Server error '})
+    }
+}
