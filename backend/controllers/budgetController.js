@@ -97,10 +97,28 @@ export const updateBudget = async (req, res) => {
         if(result.rows.length === 0){
             return res.status(404).json({ message  : 'Budget not found'})
         }
-        res.json(result.rows[0]
+        res.json(result.rows[0])
 
     } catch(error){
         console.error('update Budget error', error)
         res.status(500).json({ message : 'Server error '})
+    }
+}
+
+export const deleteBudget = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query (
+            'DELETE FROM budgets WHERE id = $1 AND user_id = $2 RETURNING id',
+            [id, req.userId]
+        )
+        if(result.rows.length === 0 ){
+            return res.status(404).json({ message : 'Budget not found!'})
+        }
+        res.json({ message : 'Budget deleted'})
+    } catch (error){
+        console.error('deletBudget error', error)
+        res.status(500).json({ message : 'Server error'})
     }
 }
