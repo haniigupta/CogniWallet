@@ -87,3 +87,33 @@ export const createTransaction = async (req, res) => {
         res.status(500).json({ message: 'Server error'})
     }
 }
+
+export const getTransactionById = async (req, res) => {
+
+    const { id } = req.params;
+
+    try{
+
+        const result = await pool.query(
+            `SELECT t.*,
+                c.name AS category_name,
+                c.icon AS category_icon,
+                c.color AS category_color
+            FROM transactions t
+            LEFT JOIN categories c ON t.category_id = c.id
+            WHERE t.id = $1 AND t.user_id = $2`,
+            [id, req.userId]
+        )
+
+        if(result.rows.length === 0){
+            return res.status(404).json({
+                message : 'Transaction not found!'
+            })
+        }
+        res.json(result.rows[0])
+
+    }catch (error){
+        console.error('getTransactionById error', error)
+        res.status(500).json({ message : 'Server error'})
+    }
+}
