@@ -56,3 +56,34 @@ export const getTransactions = async (req , res)=>{
         res.status(500).json({ message : 'Server error '})
     }
 }
+
+export const createTransaction = async (req, res) => {
+
+    const {categoryId, amount, type, description, notes, transactionDate} = req.body;
+
+    if(!amount || !type || !transactionDate){
+        return res.status(400).json({
+            message : "Amount, type and transactions are required!"
+        })
+    }
+
+    if(!['income', 'expense'].includes(type)){
+        return res.status(400).json({
+            message : "Type must be income or expense"
+        })
+    }
+
+    try {
+
+        const result = await pool.query(
+            `INSERT INTO transactions (user_id, category_id, amount, type, description, notes, transaction_date)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *`,
+            [req.userId, categoryId || null, amount, type, description || null, notes || null, transactionDate]
+        )
+
+    } catch (error){
+        console.error('createTransaction error', error)
+        res.status(500).json({ message: 'Server error'})
+    }
+}
