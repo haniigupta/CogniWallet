@@ -80,3 +80,26 @@ export const getCategoryBreakdown = async  (req, res) => {
         res.status(500).json({ message : 'Server error'})
     }
 }
+
+export const getMonthlyTrend = async  (req, res) => {
+    try {
+
+        const result = await pool.query(
+            `SELECT 
+                to_char(date_trunc('month', transaction_date), 'YYYY-MM') AS month,
+                SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) AS income,
+                SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) AS expense
+            FROM transactions
+            WHERE user_id = $1
+                AND transaction_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'
+            GROUP BY 1
+            ORDER BY 1`,
+            [req.userId]
+        )
+        res.json(result.rows)
+
+    }catch (error){
+         console.error('getMonthlyTrend error', error)
+        res.status(500).json({ message : 'Server error'})
+    }
+}
