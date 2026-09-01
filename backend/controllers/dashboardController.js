@@ -52,3 +52,31 @@ export const getSummary = async (req , res) => {
         res.status(500).json({ message : 'Server error'})
     }
 }
+
+export const getCategoryBreakdown = async  (req, res) => {
+    try {
+
+        const result = await pool.query(
+            `SELECT 
+                c.id AS category_id,
+                c.name AS category_name,
+                c.icon AS category_icon,
+                c.color AS category_color,
+                SUM(t.amount) AS total,
+                COUNT (t.id) AS transaction_count
+            FROM transactions t
+            JOIN categories c ON c.id = t.category_id
+            WHERE t.user_id = $1
+                AND t.type = 'expense'
+                AND t.transaction_date >= date_trunc('month', CURRENT_DATE)
+            GROUP BY c.id
+            ORDER BY total DESC`,
+            [req.userId]
+        )
+        res.json(result.rows)
+
+    } catch (error){
+        console.error(' getCategoryBreakdown error', error)
+        res.status(500).json({ message : 'Server error'})
+    }
+}
