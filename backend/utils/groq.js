@@ -26,24 +26,22 @@ const stripMarkdown = (text) => {
 }
 
 export const generateMonthlyInsight = async ({
-    totalIncome,
-    totalExpense,
-    savingsRate,
-    expenseBreakdown,
-    previousMonths,
-    currency = 'USD'
+    totalIncome, totalExpense, savingsRate, expenseBreakdown, previousMonths,
+    currency = 'INR'
 }) => {
 
     const breakdownText = expenseBreakdown.length > 0
         ? expenseBreakdown
-            .map(c => `- ${c.category}: ${currency} ${c.amount.toFixed(2)}`)
+            .map(c =>
+                `- ${c.category}: ${currency} ${Number(c.amount).toFixed(2)}`
+            )
             .join('\n')
         : '- No expense recorded yet'
 
     const trendText = previousMonths.length > 0
         ? previousMonths
             .map(m =>
-                `- ${m.month}: Income ${currency} ${m.income.toFixed(2)}, Expense ${currency} ${m.expense.toFixed(2)}`
+                `- ${m.month}: Income ${currency} ${Number(m.income).toFixed(2)}, Expense ${currency} ${Number(m.expense).toFixed(2)}`
             )
             .join('\n')
         : '- No previous month data available'
@@ -54,9 +52,9 @@ Analyze the user's monthly financial data and provide concise, actionable insigh
 
 Financial data:
 Currency: ${currency}
-Total income this month: ${currency} ${totalIncome.toFixed(2)}
-Total expenses this month: ${currency} ${totalExpense.toFixed(2)}
-Savings rate: ${savingsRate.toFixed(2)}%
+Total income this month: ${currency} ${Number(totalIncome).toFixed(2)}
+Total expenses this month: ${currency} ${Number(totalExpense).toFixed(2)}
+Savings rate: ${Number(savingsRate).toFixed(2)}%
 
 Expense breakdown:
 ${breakdownText}
@@ -74,6 +72,7 @@ Instructions:
 - Keep the response concise.
 - Do not provide investment, tax, or legal advice.
 - Return only valid JSON.
+- Do not use Markdown or code fences.
 
 Return exactly:
 {
@@ -120,10 +119,17 @@ export const generateBudgetAlert = async ({
     spentAmount,
     daysIntoPeriod,
     totalPeriodDays,
-    currency = 'USD',
+    currency = 'INR',
 }) => {
-    const percentUsed = ((spentAmount / budgetAmount) * 100).toFixed(1)
-    const daysLeft = totalPeriodDays - daysIntoPeriod
+
+    const budget = Number(budgetAmount)
+    const spent = Number(spentAmount)
+
+    const percentUsed = budget > 0
+        ? ((spent / budget) * 100).toFixed(1)
+        : '0.0'
+
+    const daysLeft = Math.max(totalPeriodDays - daysIntoPeriod, 0)
 
     const prompt = `You are a personal finance assistant.
 
@@ -131,8 +137,8 @@ Analyze the user's budget status and generate a concise, helpful budget alert.
 
 Budget data:
 Category: ${categoryName}
-Budget: ${currency} ${budgetAmount.toFixed(2)}
-Spent: ${currency} ${spentAmount.toFixed(2)}
+Budget: ${currency} ${budget.toFixed(2)}
+Spent: ${currency} ${spent.toFixed(2)}
 Budget used: ${percentUsed}%
 Days elapsed: ${daysIntoPeriod}
 Days remaining: ${daysLeft}
@@ -148,13 +154,13 @@ Instructions:
 - Return ONLY valid JSON.
 - Do not use Markdown or code fences.
 
-Return exactly this JSON structure:
+Return exactly:
 {
     "status": "on_track | warning | exceeded",
     "message": "Short explanation of the current budget status",
     "recommendation": "A practical action the user can take"
 }`
-    
+
     try {
         const response = await ai.chat.completions.create({
             model: 'openai/gpt-oss-20b',
@@ -186,11 +192,14 @@ export const generateSavingTips = async ({
     totalExpense,
     savingsRate,
     expenseBreakdown,
-    currency = 'USD'
+    currency = 'INR'
 }) => {
+
     const breakdownText = expenseBreakdown.length > 0
         ? expenseBreakdown
-            .map(c => `- ${c.category}: ${currency} ${c.amount.toFixed(2)}`)
+            .map(c =>
+                `- ${c.category}: ${currency} ${Number(c.amount).toFixed(2)}`
+            )
             .join('\n')
         : '- No expense recorded yet'
 
@@ -200,9 +209,9 @@ Analyze the user's income, expenses, savings rate, and spending categories to ge
 
 Financial data:
 Currency: ${currency}
-Total income: ${currency} ${totalIncome.toFixed(2)}
-Total expenses: ${currency} ${totalExpense.toFixed(2)}
-Savings rate: ${savingsRate.toFixed(2)}%
+Total income: ${currency} ${Number(totalIncome).toFixed(2)}
+Total expenses: ${currency} ${Number(totalExpense).toFixed(2)}
+Savings rate: ${Number(savingsRate).toFixed(2)}%
 
 Expense breakdown:
 ${breakdownText}
@@ -219,7 +228,7 @@ Instructions:
 - Return ONLY valid JSON.
 - Do not use Markdown or code fences.
 
-Return exactly this JSON structure:
+Return exactly:
 {
     "summary": "Short assessment of the user's saving potential",
     "tips": [
@@ -351,5 +360,85 @@ Return exactly this JSON structure:
         throw new Error(
             'Failed to analyze transactions. Please try again later.'
         )
+    }
+}
+
+export const analyzeBudgetList = async ({
+    budgets,
+    currency = 'INR'
+}) => {
+
+    const budgetText = budgets.length > 0
+        ? budgets.map((b, index) => `
+${index + 1}. Category: ${b.category}
+   Budget: ${currency} ${Number(b.budgetAmount).toFixed(2)}
+   Spent: ${currency} ${Number(b.spentAmount).toFixed(2)}
+   Remaining: ${currency} ${Number(b.remainingAmount).toFixed(2)}
+   Used: ${Number(b.percentUsed).toFixed(1)}%
+   Period: ${b.period}
+`).join('\n')
+        : '- No budgets available'
+
+    const prompt = `You are a personal finance analyst.
+
+Analyze the user's budget list and identify important budget patterns, overspending risks, and opportunities to improve budget management.
+
+Budget data:
+Currency: ${currency}
+
+${budgetText}
+
+Instructions:
+- Identify budgets that have been exceeded or are close to being exceeded.
+- Identify categories where spending is well below the budget.
+- Compare spending across different budget categories.
+- Highlight the most important budget management patterns.
+- Give practical recommendations for improving budget allocation or spending control.
+- Do not invent, assume, or estimate any financial data.
+- Base every observation only on the provided budget data.
+- Do not provide investment, tax, or legal advice.
+- Keep the analysis concise and easy to understand.
+- Return ONLY valid JSON.
+- Do not use Markdown or code fences.
+
+Return exactly this JSON structure:
+{
+    "summary": "Short overall assessment of the user's budgets",
+    "insights": [
+        {
+            "category": "Category name",
+            "status": "exceeded | at_risk | on_track | underspent",
+            "description": "Important observation about this budget"
+        }
+    ],
+    "recommendations": [
+        "Specific actionable recommendation",
+        "Another actionable recommendation"
+    ]
+}`
+
+    try {
+        const response = await ai.chat.completions.create({
+            model: 'openai/gpt-oss-20b',
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            temperature: 0.2,
+            response_format: {
+                type: 'json_object'
+            }
+        })
+
+        const text = response.choices[0].message.content
+        const cleaned = stripMarkdown(text)
+
+        return JSON.parse(cleaned)
+
+    } catch (error) {
+        console.error('Error analyzing budgets:', error)
+        throw new Error('Failed to analyze budgets. Please try again later.')
     }
 }
