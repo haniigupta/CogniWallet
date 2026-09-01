@@ -180,3 +180,89 @@ Return exactly this JSON structure:
         throw new Error('Failed to generate budget alert. Please try again later.')
     }
 }
+
+export const generateSavingTips = async ({
+    totalIncome,
+    totalExpense,
+    savingsRate,
+    expenseBreakdown,
+    currency = 'USD'
+}) => {
+    const breakdownText = expenseBreakdown.length > 0
+        ? expenseBreakdown
+            .map(c => `- ${c.category}: ${currency} ${c.amount.toFixed(2)}`)
+            .join('\n')
+        : '- No expense recorded yet'
+
+    const prompt = `You are a personal finance assistant.
+
+Analyze the user's income, expenses, savings rate, and spending categories to generate practical saving tips.
+
+Financial data:
+Currency: ${currency}
+Total income: ${currency} ${totalIncome.toFixed(2)}
+Total expenses: ${currency} ${totalExpense.toFixed(2)}
+Savings rate: ${savingsRate.toFixed(2)}%
+
+Expense breakdown:
+${breakdownText}
+
+Instructions:
+- Identify the categories where the user has the greatest opportunity to reduce spending.
+- Consider the user's savings rate when giving advice.
+- Provide specific and realistic ways to save money.
+- Prioritize high-impact changes over generic advice.
+- Do not invent, assume, or estimate any financial data.
+- Do not recommend unrealistic spending cuts.
+- Do not provide investment, tax, or legal advice.
+- Keep the tips concise and easy to understand.
+- Return ONLY valid JSON.
+- Do not use Markdown or code fences.
+
+Return exactly this JSON structure:
+{
+    "summary": "Short assessment of the user's saving potential",
+    "tips": [
+        {
+            "category": "Expense category",
+            "tip": "Specific actionable saving tip",
+            "priority": "high | medium | low"
+        },
+        {
+            "category": "Expense category",
+            "tip": "Specific actionable saving tip",
+            "priority": "high | medium | low"
+        },
+        {
+            "category": "General",
+            "tip": "Another practical saving tip",
+            "priority": "high | medium | low"
+        }
+    ]
+}`
+
+    try {
+        const response = await ai.chat.completions.create({
+            model: 'openai/gpt-oss-20b',
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            temperature: 0.3,
+            response_format: {
+                type: 'json_object'
+            }
+        })
+
+        const text = response.choices[0].message.content
+        const cleaned = stripMarkdown(text)
+
+        return JSON.parse(cleaned)
+
+    } catch (error) {
+        console.error('Error generating saving tips:', error)
+        throw new Error('Failed to generate saving tips. Please try again later.')
+    }
+}
