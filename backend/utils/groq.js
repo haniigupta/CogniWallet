@@ -113,3 +113,70 @@ Return exactly:
         throw new Error('Failed to generate insights. Please try again later.')
     }
 }
+
+export const generateBudgetAlert = async ({
+    categoryName,
+    budgetAmount,
+    spentAmount,
+    daysIntoPeriod,
+    totalPeriodDays,
+    currency = 'USD',
+}) => {
+    const percentUsed = ((spentAmount / budgetAmount) * 100).toFixed(1)
+    const daysLeft = totalPeriodDays - daysIntoPeriod
+
+    const prompt = `You are a personal finance assistant.
+
+Analyze the user's budget status and generate a concise, helpful budget alert.
+
+Budget data:
+Category: ${categoryName}
+Budget: ${currency} ${budgetAmount.toFixed(2)}
+Spent: ${currency} ${spentAmount.toFixed(2)}
+Budget used: ${percentUsed}%
+Days elapsed: ${daysIntoPeriod}
+Days remaining: ${daysLeft}
+
+Instructions:
+- Assess whether the user is on track to stay within the budget.
+- Consider the percentage of budget already used and the remaining days.
+- Clearly explain the current budget status.
+- Give one or two practical suggestions to control spending if necessary.
+- Do not invent, assume, or estimate any financial data.
+- Keep the response concise and easy to understand.
+- Do not provide investment, tax, or legal advice.
+- Return ONLY valid JSON.
+- Do not use Markdown or code fences.
+
+Return exactly this JSON structure:
+{
+    "status": "on_track | warning | exceeded",
+    "message": "Short explanation of the current budget status",
+    "recommendation": "A practical action the user can take"
+}`
+    
+    try {
+        const response = await ai.chat.completions.create({
+            model: 'openai/gpt-oss-20b',
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            temperature: 0.3,
+            response_format: {
+                type: 'json_object'
+            }
+        })
+
+        const text = response.choices[0].message.content
+        const cleaned = stripMarkdown(text)
+
+        return JSON.parse(cleaned)
+
+    } catch (error) {
+        console.error('Error generating budget alert:', error)
+        throw new Error('Failed to generate budget alert. Please try again later.')
+    }
+}
