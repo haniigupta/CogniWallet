@@ -24,7 +24,7 @@ app.get('/', (req,res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes)
 app.use('/api/transactions', transactionRoutes)
-app.use('/api/budegt', budgetRoutes)
+app.use('/api/budegts', budgetRoutes)
 
 app.listen(PORT, ()=> {
     console.log(`Server is running on port ${PORT}`)
