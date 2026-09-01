@@ -266,3 +266,90 @@ Return exactly this JSON structure:
         throw new Error('Failed to generate saving tips. Please try again later.')
     }
 }
+
+export const analyzeTransactionList = async ({
+    transactions,
+    currency = 'USD'
+}) => {
+
+    const transactionText = transactions.length > 0
+        ? transactions.map((t, index) => `
+${index + 1}. Date: ${t.transaction_date}
+   Type: ${t.type}
+   Category: ${t.category || 'Uncategorized'}
+   Amount: ${currency} ${Number(t.amount).toFixed(2)}
+   Description: ${t.description || 'None'}
+   Notes: ${t.notes || 'None'}
+`).join('\n')
+        : '- No transactions available'
+
+    const prompt = `You are a personal finance analyst.
+
+Analyze the user's transaction list and identify meaningful spending and income patterns.
+
+Transactions:
+${transactionText}
+
+Instructions:
+- Identify unusual or potentially problematic transactions.
+- Identify recurring or frequent spending patterns when the data supports it.
+- Highlight categories with significant spending.
+- Point out notable income patterns when applicable.
+- Look for unnecessary or potentially reducible expenses based only on the provided information.
+- Do not claim that a transaction is fraudulent or unnecessary without sufficient evidence.
+- Do not invent, assume, or estimate financial data.
+- Do not provide investment, tax, or legal advice.
+- Keep the analysis concise and useful.
+- If there is insufficient data for a particular observation, do not make that observation.
+- Return ONLY valid JSON.
+- Do not use Markdown or code fences.
+
+Return exactly this JSON structure:
+{
+    "summary": "Short overall analysis of the transaction activity",
+    "patterns": [
+        {
+            "type": "spending | income | frequency",
+            "description": "Meaningful pattern found in the transactions"
+        }
+    ],
+    "notableTransactions": [
+        {
+            "date": "Transaction date",
+            "category": "Category name",
+            "amount": "Transaction amount",
+            "reason": "Why this transaction is notable"
+        }
+    ],
+    "recommendations": [
+        "Specific actionable recommendation"
+    ]
+}`
+
+    try {
+        const response = await ai.chat.completions.create({
+            model: 'openai/gpt-oss-20b',
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            temperature: 0.2,
+            response_format: {
+                type: 'json_object'
+            }
+        })
+
+        const text = response.choices[0].message.content
+        const cleaned = stripMarkdown(text)
+
+        return JSON.parse(cleaned)
+
+    } catch (error) {
+        console.error('Error analyzing transactions:', error)
+        throw new Error(
+            'Failed to analyze transactions. Please try again later.'
+        )
+    }
+}
