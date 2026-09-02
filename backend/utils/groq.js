@@ -442,3 +442,11 @@ Return exactly this JSON structure:
         throw new Error('Failed to analyze budgets. Please try again later.')
     }
 }
+
+export default {
+    generateMonthlyInsight,
+    generateBudgetAlert,
+    generateSavingTips,
+    analyzeTransactionList,
+    analyzeBudgetList
+}
