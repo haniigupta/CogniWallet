@@ -129,3 +129,49 @@ const buildSavingTips = async  (userId) => {
 
     return { content, periodStart: null, periodEnd: null }
 }
+
+const buildBudgetALert = async  (userId, categoryId) => {
+    if(!categoryId) {
+        const err = new Error('category id is required for budget_alert')
+        err.status = 400;
+        throw err
+    }
+
+    const budgetRow = await pool.query(
+        `SELECT b.*, c.name AS category_name,
+        COALESCE((
+            SELECT SUM(amount) FROM transactions
+            WHERE user_id = b.user_id
+                AND category_id = b.category_id
+                AND type = 'expense'
+                AND transaction_date >= date_trunc('month', CURRENT_DATE)
+        ), 0 ) AS spent
+        FROM budgets b
+        JOIN categories c ON c.id = b.category_id
+        WHERE b.user_id = $1 AND b.category_id = $2`,
+        [userId, categoryId]
+    )
+
+    if(budgetRow.rows.length === 0){
+        const err = new Error('Budget not found for category')
+        err.status = 400;
+        throw err
+    }
+
+    const b = budgetRow.rows[0]
+    const now = new Date();
+    const daysIntoPeriod = now.getDate()
+    const totalPeriodDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const currency = await getUserCurrency(userId)
+
+    const content = await generateBudgetAlert({
+        categoryName: b.category_name,
+        budgetAmount: parseFloat(b.amount),
+        spentAmount: parseFloat(b.spent),
+        daysIntoPeriod,
+        totalPeriodDays,
+        currency
+    })
+
+    return { content, periodStart: null, periodEnd: null}
+}
