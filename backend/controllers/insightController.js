@@ -175,3 +175,38 @@ const buildBudgetALert = async  (userId, categoryId) => {
 
     return { content, periodStart: null, periodEnd: null}
 }
+
+export const generateInsight = async  ( req, res) => {
+    const { type, categoryId} = req.body;
+
+    if(!type){
+        return res.status(400).json({ message: 'Insight type is required!'})
+    }
+
+    try {
+
+        let result;
+        if(type === 'monthly_summary'){
+            result = await buildMonthlyInsight(userId)
+        } else if(type === 'saving_tips'){
+            result = await buildSavingTips(req.userId)
+        } else if (type === 'budget_alert'){
+            result = await buildBudgetALert(req.userId, categoryId)
+        } else {
+            return res.status(400).json({ message : 'Unknown insight type'})
+        }
+
+        const inserted = await pool.query (
+            `INSERT INTO ai_insights (user_id, insight_type, period_start, period_end, content_json)
+            VALUES($1, $2, $3, $4, $5)
+            RETURNING *`,
+            [req.userId, type, result.periodStart, result.periodEnd, result.content]
+        )
+        res.status(201).json(inserted.rows[0])
+
+    } catch (error){
+        console.error('generateInsight error', error)
+        res.status(error.status || 500).json({ message : error.message || 'Server error'})
+
+    }
+}
