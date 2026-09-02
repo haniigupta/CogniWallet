@@ -1,4 +1,5 @@
 import pool from '../db.js'
+import { analyzeTransactionList } from '../utils/groq.js'
 
 export const getTransactions = async (req , res)=>{
     const { startDate, endDate, categoryId, type, search, limit = 50, offset = 0} = req.query;
@@ -179,4 +180,47 @@ export const deleteTransaction = async (req, res) => {
     }
 }
 
+export const analyzeTransactions = async  (req, res) => {
+
+    const { transactionIds } = req.body;
+
+    if(!Array.isArray(transactionIds) || transactionIds.length === 0){
+        return res.status(400).json({ message : 'transaction array is required'})
+    }
+
+    const ids = transactionIds.slice(0,50)
+
+    try {
+
+        const result = await pool.query (
+            `SELECT t.id, t.amount, t.type, t.description, t.transaction_date,
+                    c.name AS category_name
+            FROM transactions t
+            LEFT JOIN categories c ON c.id = t.category_id
+            WHERE t.user_id = $1 AND t.id = ANY($2::int[])
+            ORDER BY t.transaction_date DESC`,
+            [req.userId, ids]
+        )
+
+        if(result.rows.length === 0 ){
+            return res.status(400).json({ message : 'No transaction found for analysis'})
+        }
+
+        const userRes = await pool.query(
+            'SELECT currency FROM users WHERE id= $1', [req.userId]
+        )
+        const currency = userRes.rows[0]?.currency || 'INR'
+
+        const analysis = await analyzeTransactionList({
+            transactions: result.rows,
+            currency
+        })
+        res.json(analysis)
+
+    } catch ( error){
+        console.error('analyzeTransaction error', error)
+        res.status(500).json({ message : error.message || 'Server error'})
+
+    }
+}
 
