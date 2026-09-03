@@ -188,64 +188,52 @@ Return exactly:
 }
 
 export const generateSavingTips = async ({
-    totalIncome,
-    totalExpense,
-    savingsRate,
-    expenseBreakdown,
+    topCategories = [],
+    monthlyIncome = 0,
     currency = 'INR'
 }) => {
 
-    const breakdownText = expenseBreakdown.length > 0
-        ? expenseBreakdown
-            .map(c =>
-                `- ${c.category}: ${currency} ${Number(c.amount).toFixed(2)}`
+    const categoriesText = topCategories.length > 0
+        ? topCategories
+            .map((category, index) =>
+                `${index + 1}. ${category.category}: ${currency} ${Number(category.amount).toFixed(2)} spent across ${category.transactionCount} transactions`
             )
             .join('\n')
-        : '- No expense recorded yet'
+        : '- No significant expense categories found'
 
     const prompt = `You are a personal finance assistant.
 
-Analyze the user's income, expenses, savings rate, and spending categories to generate practical saving tips.
+Analyze the user's recent spending categories and income to generate practical, personalized saving tips.
 
 Financial data:
 Currency: ${currency}
-Total income: ${currency} ${Number(totalIncome).toFixed(2)}
-Total expenses: ${currency} ${Number(totalExpense).toFixed(2)}
-Savings rate: ${Number(savingsRate).toFixed(2)}%
+Recent income: ${currency} ${Number(monthlyIncome).toFixed(2)}
 
-Expense breakdown:
-${breakdownText}
+Top spending categories:
+${categoriesText}
 
 Instructions:
-- Identify the categories where the user has the greatest opportunity to reduce spending.
-- Consider the user's savings rate when giving advice.
-- Provide specific and realistic ways to save money.
+- Identify the categories with the greatest opportunity to reduce spending.
 - Prioritize high-impact changes over generic advice.
-- Do not invent, assume, or estimate any financial data.
+- Give specific and realistic saving suggestions.
+- Use the transaction count and spending amount when relevant.
+- Do not invent, assume, or estimate financial data that is not provided.
 - Do not recommend unrealistic spending cuts.
 - Do not provide investment, tax, or legal advice.
 - Keep the tips concise and easy to understand.
+- estimatedSavings must be a reasonable estimate based on the provided spending data.
 - Return ONLY valid JSON.
 - Do not use Markdown or code fences.
 
-Return exactly:
+Return exactly this JSON structure:
 {
-    "summary": "Short assessment of the user's saving potential",
+    "overallTip": "One concise overall recommendation based on the user's spending.",
     "tips": [
         {
             "category": "Expense category",
-            "tip": "Specific actionable saving tip",
-            "priority": "high | medium | low"
-        },
-        {
-            "category": "Expense category",
-            "tip": "Specific actionable saving tip",
-            "priority": "high | medium | low"
-        },
-        {
-            "category": "General",
-            "tip": "Another practical saving tip",
-            "priority": "high | medium | low"
+            "title": "Short actionable title",
+            "detail": "Specific practical saving recommendation.",
+            "estimatedSavings": 0
         }
     ]
 }`
