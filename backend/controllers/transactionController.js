@@ -29,7 +29,7 @@ export const getTransactions = async (req , res)=>{
     }
 
     if(search){
-        conditions.push(`t.description ILIKE $${idx++} OR t.notes ILIKE $${idx}`)
+        conditions.push(`t.description ILIKE $${idx} OR t.notes ILIKE $${idx}`)
         values.push(`%${search}%`)
         idx++
     }
@@ -82,6 +82,7 @@ export const createTransaction = async (req, res) => {
             RETURNING *`,
             [req.userId, categoryId || null, amount, type, description || null, notes || null, transactionDate]
         )
+         return res.status(201).json(result.rows[0]);
 
     } catch (error){
         console.error('createTransaction error', error)
