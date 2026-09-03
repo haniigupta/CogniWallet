@@ -12,22 +12,31 @@ import EmptyState from '../components/EmptyState.jsx';
 import Spinner from '../components/Spinner.jsx';
 import BudgetForm from '../components/BudgetForm.jsx';
 
+
+
 const statusStyles = {
-    good: {
+    on_track: {
         Icon: CheckCircle2,
         label: 'On Track',
         bg: 'bg-emerald-50',
         text: 'text-emerald-700',
         iconColor: 'text-emerald-600',
     },
-    caution: {
+    underspent: {
+        Icon: CheckCircle2,
+        label: 'Underspent',
+        bg: 'bg-emerald-50',
+        text: 'text-emerald-700',
+        iconColor: 'text-emerald-600',
+    },
+    at_risk: {
         Icon: AlertTriangle,
         label: 'Watch It',
         bg: 'bg-amber-50',
         text: 'text-amber-700',
         iconColor: 'text-amber-600',
     },
-    concerning: {
+    exceeded: {
         Icon: AlertOctagon,
         label: 'Over Budget',
         bg: 'bg-rose-50',
@@ -59,44 +68,108 @@ const Budgets = () => {
     const [editing, setEditing] = useState(null);
     const [analyses, setAnalyses] = useState({});
     const [analyzing, setAnalyzing] = useState(true);
+  
 
     const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [bRes, cRes] = await Promise.all([
-                api.get(API_PATHS.BUDGETS.LIST),
-                api.get(API_PATHS.CATEGORIES.LIST),
-            ]);
-            setBudgets(bRes.data);
-            setCategories(cRes.data);
-        } catch (err) {
-            toast.error('Failed to load budgets');
-        } finally {
-            setLoading(false);
-        }
-    };
+    try {
+        setLoading(true);
 
-    const analyzeAll = async () => {
-        setAnalyses({});
-        setAnalyzing(true);
-        try {
-            const res = await api.post(API_PATHS.BUDGETS.ANALYZE);
-            const map = {};
-            (res.data.analyses || []).forEach((a) => {
-                map[a.budgetId] = a;
-            });
-            setAnalyses(map);
-        } catch (err) {
-            console.error('Failed to analyze budgets', err);
-        } finally {
+        const [bRes, cRes] = await Promise.all([
+            api.get(API_PATHS.BUDGETS.LIST),
+            api.get(API_PATHS.CATEGORIES.LIST),
+        ]);
+
+        const loadedBudgets = bRes.data;
+
+        setBudgets(loadedBudgets);
+        setCategories(cRes.data);
+
+        if (loadedBudgets.length > 0) {
+            await analyzeAll(loadedBudgets);
+        } else {
+            setAnalyses({});
             setAnalyzing(false);
         }
-    };
+    } catch (err) {
+        toast.error('Failed to load budgets');
+        setAnalyzing(false);
+    } finally {
+        setLoading(false);
+    }
+};
 
-    useEffect(() => {
-        fetchData();
-        analyzeAll();
-    }, []);
+    const analyzeAll = async (budgetList = budgets) => {
+    setAnalyses({});
+    setAnalyzing(true);
+
+    try {
+        const res = await api.post(API_PATHS.BUDGETS.ANALYZE);
+
+        console.log('Budget analysis response:', res.data);
+
+        // Support either { insights: [...] } or { analyses: [...] }
+        // and also a nested { data: { insights: [...] } } response.
+        const responseData = res.data?.data || res.data;
+
+        const insights =
+            responseData?.insights ||
+            responseData?.analyses ||
+            [];
+
+        const map = {};
+
+        insights.forEach((insight) => {
+            // Best case: backend gives us the budget ID directly
+            if (insight.budgetId != null) {
+                map[insight.budgetId] = insight;
+                return;
+            }
+
+            // Otherwise match using category name
+            const insightCategory = (
+                insight.category ||
+                insight.category_name ||
+                insight.categoryName ||
+                ''
+            )
+                .trim()
+                .toLowerCase();
+
+            const budget = budgetList.find((b) => {
+                const budgetCategory = (b.category_name || '')
+                    .trim()
+                    .toLowerCase();
+
+                return budgetCategory === insightCategory;
+            });
+
+            if (budget) {
+                map[budget.id] = insight;
+            }
+        });
+
+        console.log('Mapped budget analyses:', map);
+
+        setAnalyses(map);
+    } catch (err) {
+        console.error(
+            'Failed to analyze budgets:',
+            err.response?.data || err
+        );
+
+        toast.error(
+            err.response?.data?.message ||
+            'Failed to analyze budgets'
+        );
+    } finally {
+        setAnalyzing(false);
+    }
+};
+   useEffect(() => {
+    fetchData();
+}, []);
+
+
 
     const onEdit = (b) => {
         setEditing(b);
@@ -118,12 +191,10 @@ const Budgets = () => {
             toast.error('Failed to delete');
         }
     };
-
-    const onSaved = () => {
-        setModalOpen(false);
-        fetchData();
-        analyzeAll();
-    };
+const onSaved = async () => {
+    setModalOpen(false);
+    await fetchData();
+};
 
     const hasAnalyses = Object.keys(analyses).length > 0;
 
@@ -171,7 +242,7 @@ const Budgets = () => {
                         const barColor =
                             pct >= 100 ? 'bg-rose-500' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500';
                         const analysis = analyses[b.id];
-                        const style = analysis ? statusStyles[analysis.status] : null;
+                        const style = analysis ? statusStyles[analysis.status] || statusStyles[analysis.status?.toLowerCase()] : null;
 
                         return (
                             <div
@@ -232,7 +303,7 @@ const Budgets = () => {
                                                 <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${style.bg} ${style.text} mb-1`}>
                                                     {style.label}
                                                 </span>
-                                                <p className="text-xs text-slate-600 leading-relaxed">{analysis.message}</p>
+                                                <p className="text-xs text-slate-600 leading-relaxed">{analysis.description}</p>
                                             </div>
                                         </div>
                                     </div>

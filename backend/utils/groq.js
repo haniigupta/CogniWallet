@@ -478,16 +478,19 @@ export const analyzeBudgetList = async ({
     currency = 'INR'
 }) => {
 
-    const budgetText = budgets.length > 0
-        ? budgets.map((b, index) => `
-${index + 1}. Category: ${b.category}
-   Budget: ${currency} ${Number(b.budgetAmount).toFixed(2)}
-   Spent: ${currency} ${Number(b.spentAmount).toFixed(2)}
-   Remaining: ${currency} ${Number(b.remainingAmount).toFixed(2)}
-   Used: ${Number(b.percentUsed).toFixed(1)}%
-   Period: ${b.period}
+    const safeBudgets = Array.isArray(budgets) ? budgets : [];
+
+    const budgetText = safeBudgets.length > 0
+        ? safeBudgets.map((b, index) => `
+${index + 1}. Budget ID: ${b.budgetId}
+   Category: ${b.category || 'Uncategorized'}
+   Budget: ${currency} ${Number(b.budgetAmount || 0).toFixed(2)}
+   Spent: ${currency} ${Number(b.spentAmount || 0).toFixed(2)}
+   Remaining: ${currency} ${Number(b.remainingAmount || 0).toFixed(2)}
+   Used: ${Number(b.percentUsed || 0).toFixed(1)}%
+   Period: ${b.period || 'unknown'}
 `).join('\n')
-        : '- No budgets available'
+        : '- No budgets available';
 
     const prompt = `You are a personal finance analyst.
 
@@ -516,6 +519,7 @@ Return exactly this JSON structure:
     "summary": "Short overall assessment of the user's budgets",
     "insights": [
         {
+            "budgetId": 0,
             "category": "Category name",
             "status": "exceeded | at_risk | on_track | underspent",
             "description": "Important observation about this budget"
@@ -525,7 +529,7 @@ Return exactly this JSON structure:
         "Specific actionable recommendation",
         "Another actionable recommendation"
     ]
-}`
+}`;
 
     try {
         const response = await ai.chat.completions.create({
@@ -540,18 +544,70 @@ Return exactly this JSON structure:
             response_format: {
                 type: 'json_object'
             }
-        })
+        });
 
-        const text = response.choices[0].message.content
-        const cleaned = stripMarkdown(text)
+        const text = response.choices?.[0]?.message?.content;
 
-        return JSON.parse(cleaned)
+        if (!text) {
+            throw new Error('Groq returned an empty response');
+        }
+
+        const cleaned = stripMarkdown(text);
+
+        const parsed = JSON.parse(cleaned);
+
+        return {
+            summary:
+                typeof parsed.summary === 'string'
+                    ? parsed.summary.trim()
+                    : '',
+
+            insights: Array.isArray(parsed.insights)
+                ? parsed.insights
+                    .filter(
+                        (insight) =>
+                            insight &&
+                            typeof insight === 'object' &&
+                            typeof insight.category === 'string' &&
+                            typeof insight.status === 'string' &&
+                            typeof insight.description === 'string'
+                    )
+                    .map((insight) => ({
+                        budgetId:
+                            insight.budgetId != null
+                                ? Number(insight.budgetId)
+                                : null,
+
+                        category: insight.category.trim(),
+
+                        status: [
+                            'exceeded',
+                            'at_risk',
+                            'on_track',
+                            'underspent'
+                        ].includes(insight.status)
+                            ? insight.status
+                            : 'on_track',
+
+                        description: insight.description.trim()
+                    }))
+                : [],
+
+            recommendations: Array.isArray(parsed.recommendations)
+                ? parsed.recommendations.filter(
+                    (item) =>
+                        typeof item === 'string' && item.trim()
+                )
+                : []
+        };
 
     } catch (error) {
-        console.error('Error analyzing budgets:', error)
-        throw new Error('Failed to analyze budgets. Please try again later.')
+        console.error('Error analyzing budgets:', error);
+        throw new Error(
+            'Failed to analyze budgets. Please try again later.'
+        );
     }
-}
+};
 
 export default {
     generateMonthlyInsight,
