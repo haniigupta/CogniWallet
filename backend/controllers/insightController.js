@@ -187,7 +187,7 @@ export const generateInsight = async  ( req, res) => {
 
         let result;
         if(type === 'monthly_summary'){
-            result = await buildMonthlyInsight(userId)
+            result = await buildMonthlyInsight(req.userId)
         } else if(type === 'saving_tips'){
             result = await buildSavingTips(req.userId)
         } else if (type === 'budget_alert'){
