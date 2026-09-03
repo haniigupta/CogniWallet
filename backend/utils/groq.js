@@ -395,7 +395,7 @@ export const analyzeTransactionList = async ({
         ? transactions.map((t, index) => `
 ${index + 1}. Date: ${t.transaction_date}
    Type: ${t.type}
-   Category: ${t.category || 'Uncategorized'}
+   Category: ${t.category_name || t.category || 'Uncategorized'}
    Amount: ${currency} ${Number(t.amount).toFixed(2)}
    Description: ${t.description || 'None'}
    Notes: ${t.notes || 'None'}

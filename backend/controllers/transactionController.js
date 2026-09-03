@@ -212,8 +212,7 @@ export const analyzeTransactions = async  (req, res) => {
     try {
 
         const result = await pool.query (
-            `SELECT t.id, t.amount, t.type, t.description, t.transaction_date,
-                    c.name AS category_name
+            `SELECT t.id, t.amount, t.type, t.description,t.notes, t.transaction_date, c.name AS category
             FROM transactions t
             LEFT JOIN categories c ON c.id = t.category_id
             WHERE t.user_id = $1 AND t.id = ANY($2::int[])

@@ -242,71 +242,185 @@ const Transactions = () => {
                 <TransactionTrendChart data={trendData} currency={currency} interval={chartInterval} />
             </div>
 
-            <div className="bg-white rounded-3xl border border-slate-100 p-5">
-                {!analysis ? (
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center shrink-0">
-                                <Sparkles size={18} className="text-white" />
-                            </div>
-                            <div className="min-w-0">
-                                <h3 className="font-semibold text-slate-900">AI Spending Insight</h3>
-                                <p className="text-sm text-slate-500 truncate">
-                                    Get a quick analysis of the {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} in this view
-                                </p>
-                            </div>
-                        </div>
-                        <Button
-                            onClick={generateInsight}
-                            disabled={analysisLoading || transactions.length === 0}
-                            size="sm"
-                        >
-                            {analysisLoading ? (
-                                <>
-                                    <Spinner size="sm" />
-                                    Analyzing
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles size={14} />
-                                    Generate
-                                </>
-                            )}
-                        </Button>
-                    </div>
+           <div className="bg-white rounded-3xl border border-slate-100 p-5">
+    {!analysis ? (
+        <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center shrink-0">
+                    <Sparkles size={18} className="text-white" />
+                </div>
+
+                <div className="min-w-0">
+                    <h3 className="font-semibold text-slate-900">
+                        AI Spending Insight
+                    </h3>
+
+                    <p className="text-sm text-slate-500 truncate">
+                        Get a quick analysis of the {transactions.length} transaction
+                        {transactions.length !== 1 ? 's' : ''} in this view
+                    </p>
+                </div>
+            </div>
+
+            <Button
+                onClick={generateInsight}
+                disabled={analysisLoading || transactions.length === 0}
+                size="sm"
+            >
+                {analysisLoading ? (
+                    <>
+                        <Spinner size="sm" />
+                        Analyzing
+                    </>
                 ) : (
-                    <div className="flex gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center shrink-0">
-                            <Sparkles size={18} className="text-white" />
+                    <>
+                        <Sparkles size={14} />
+                        Generate
+                    </>
+                )}
+            </Button>
+        </div>
+    ) : (
+        <div className="flex gap-4">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center shrink-0">
+                <Sparkles size={18} className="text-white" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-slate-900">
+                        AI Spending Insight
+                    </h3>
+                </div>
+
+                {/* Summary */}
+                {analysis.summary && (
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                        {analysis.summary}
+                    </p>
+                )}
+
+                {/* Patterns */}
+                {Array.isArray(analysis.patterns) &&
+                    analysis.patterns.length > 0 && (
+                        <div className="mt-4">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                Spending Patterns
+                            </h4>
+
+                            <div className="space-y-2">
+                                {analysis.patterns.map((pattern, index) => (
+                                    <div
+                                        key={index}
+                                        className="bg-slate-50 rounded-xl px-3 py-2"
+                                    >
+                                        <p className="text-sm text-slate-700">
+                                            {pattern.description}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-slate-900">AI Spending Insight</h3>
-                                {analysis.highlight && (
-                                    <span className="inline-flex items-center bg-violet-50 text-violet-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                                        {analysis.highlight}
-                                    </span>
+                    )}
+
+                {/* Notable transactions */}
+                {Array.isArray(analysis.notableTransactions) &&
+                    analysis.notableTransactions.length > 0 && (
+                        <div className="mt-4">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                Notable Transactions
+                            </h4>
+
+                            <div className="space-y-2">
+                                {analysis.notableTransactions.map(
+                                    (transaction, index) => (
+                                        <div
+                                            key={index}
+                                            className="bg-slate-50 rounded-xl px-3 py-2"
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-slate-800">
+                                                        {transaction.category ||
+                                                            'Uncategorized'}
+                                                    </p>
+
+                                                    <p className="text-xs text-slate-500">
+                                                        {transaction.date}
+                                                    </p>
+                                                </div>
+
+                                                <span className="text-sm font-semibold text-slate-800 whitespace-nowrap">
+                                                    {formatCurrency(
+                                                        transaction.amount,
+                                                        currency
+                                                    )}
+                                                </span>
+                                            </div>
+
+                                            {transaction.reason && (
+                                                <p className="text-xs text-slate-600 mt-1">
+                                                    {transaction.reason}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )
                                 )}
                             </div>
-                            <p className="text-sm text-slate-700 leading-relaxed">{analysis.insight}</p>
-                            <button
-                                onClick={generateInsight}
-                                disabled={analysisLoading}
-                                className="mt-3 text-xs font-medium text-violet-600 hover:text-violet-700 disabled:opacity-50"
-                            >
-                                {analysisLoading ? 'Re-analyzing...' : 'Re-analyze'}
-                            </button>
                         </div>
-                        <button
-                            onClick={() => setAnalysis(null)}
-                            className="text-slate-400 hover:text-slate-600 shrink-0 p-1"
-                            title="Dismiss"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                )}
+                    )}
+
+                {/* Recommendations */}
+                {Array.isArray(analysis.recommendations) &&
+                    analysis.recommendations.length > 0 && (
+                        <div className="mt-4">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                Recommendations
+                            </h4>
+
+                            <div className="space-y-2">
+                                {analysis.recommendations.map(
+                                    (recommendation, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex gap-2 bg-violet-50 rounded-xl px-3 py-2"
+                                        >
+                                            <Sparkles
+                                                size={14}
+                                                className="text-violet-600 mt-0.5 shrink-0"
+                                            />
+
+                                            <p className="text-sm text-slate-700">
+                                                {recommendation}
+                                            </p>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                <button
+                    onClick={generateInsight}
+                    disabled={analysisLoading}
+                    className="mt-4 text-xs font-medium text-violet-600 hover:text-violet-700 disabled:opacity-50"
+                >
+                    {analysisLoading
+                        ? 'Re-analyzing...'
+                        : 'Re-analyze'}
+                </button>
             </div>
+
+            <button
+                onClick={() => setAnalysis(null)}
+                className="text-slate-400 hover:text-slate-600 shrink-0 p-1"
+                title="Dismiss"
+            >
+                <X size={16} />
+            </button>
+        </div>
+    )}
+</div>
 
             <div className="bg-white rounded-3xl border border-slate-100 p-5">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
