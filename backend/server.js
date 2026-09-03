@@ -26,7 +26,7 @@ app.get('/', (req,res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes)
 app.use('/api/transactions', transactionRoutes)
-app.use('/api/budegts', budgetRoutes)
+app.use('/api/budgets', budgetRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/insights', insightRoutes)
 
