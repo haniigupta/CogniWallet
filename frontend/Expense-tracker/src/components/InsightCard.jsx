@@ -93,21 +93,29 @@ const MonthlySummaryView = ({ c }) => (
             </div>
         </div>
 
-        {typeof c.estimatedMonthlySavings === 'number' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Stat label="Health Score" value={`${c.healthScore ?? 0}/100`} accent="violet" />
-                <Stat
-                    label="Estimated Savings"
-                    value={`$${Number(c.estimatedMonthlySavings).toLocaleString()}/mo`}
-                    accent="emerald"
-                />
-                <Stat
-                    label="Recommendations"
-                    value={c.recommendations?.length || 0}
-                    accent="slate"
-                />
-            </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <Stat
+        label="Health Score"
+        value={`${Number(c.healthScore) || 0}/100`}
+        accent="violet"
+    />
+
+    <Stat
+        label="Positive signals"
+        value={Array.isArray(c.highlights) ? c.highlights.length : 0}
+        accent="emerald"
+    />
+
+    <Stat
+        label="Recommendations"
+        value={
+            Array.isArray(c.recommendations)
+                ? c.recommendations.length
+                : 0
+        }
+        accent="slate"
+    />
+</div>
 
         {c.highlights?.length > 0 && (
             <div>
@@ -332,9 +340,19 @@ const headerChip = (insight) => {
 
 const InsightCard = ({ insight, defaultExpanded = false }) => {
     const [expanded, setExpanded] = useState(defaultExpanded);
-    const c = insight.content_json;
-    const t = typeStyles[insight.insight_type] || typeStyles.monthly_summary;
+
+    const c =
+        insight?.content_json &&
+        typeof insight.content_json === 'object'
+            ? insight.content_json
+            : {};
+
+    const t =
+        typeStyles[insight?.insight_type] ||
+        typeStyles.monthly_summary;
+
     const TypeIcon = t.Icon;
+    
 
     return (
         <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden hover:border-slate-200 transition">

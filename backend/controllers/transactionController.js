@@ -77,12 +77,30 @@ export const createTransaction = async (req, res) => {
     try {
 
         const result = await pool.query(
-            `INSERT INTO transactions (user_id, category_id, amount, type, description, notes, transaction_date)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING *`,
-            [req.userId, categoryId || null, amount, type, description || null, notes || null, transactionDate]
-        )
-         return res.status(201).json(result.rows[0]);
+    `INSERT INTO transactions (
+        user_id,
+        category_id,
+        amount,
+        type,
+        description,
+        notes,
+        transaction_date
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *`,
+    [
+        req.userId,
+        categoryId || null,
+        amount,
+        type,
+        description || null,
+        notes || null,
+        transactionDate
+    ]
+);
+
+return res.status(201).json(result.rows[0]);
+         
 
     } catch (error){
         console.error('createTransaction error', error)

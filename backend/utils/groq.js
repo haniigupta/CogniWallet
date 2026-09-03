@@ -26,29 +26,40 @@ const stripMarkdown = (text) => {
 }
 
 export const generateMonthlyInsight = async ({
-    totalIncome, totalExpense, savingsRate, expenseBreakdown, previousMonths,
+    totalIncome = 0,
+    totalExpense = 0,
+    savingsRate = 0,
+    expenseBreakdown = [],
+    previousMonths = [],
     currency = 'INR'
 }) => {
-
-    const breakdownText = expenseBreakdown.length > 0
+    const safeExpenseBreakdown = Array.isArray(expenseBreakdown)
         ? expenseBreakdown
-            .map(c =>
-                `- ${c.category}: ${currency} ${Number(c.amount).toFixed(2)}`
-            )
-            .join('\n')
-        : '- No expense recorded yet'
+        : [];
 
-    const trendText = previousMonths.length > 0
+    const safePreviousMonths = Array.isArray(previousMonths)
         ? previousMonths
-            .map(m =>
-                `- ${m.month}: Income ${currency} ${Number(m.income).toFixed(2)}, Expense ${currency} ${Number(m.expense).toFixed(2)}`
+        : [];
+
+    const breakdownText = safeExpenseBreakdown.length > 0
+        ? safeExpenseBreakdown
+            .map((c) =>
+                `- ${c.category || 'Uncategorized'}: ${currency} ${Number(c.amount || 0).toFixed(2)}`
             )
             .join('\n')
-        : '- No previous month data available'
+        : '- No expense recorded yet';
+
+    const trendText = safePreviousMonths.length > 0
+        ? safePreviousMonths
+            .map((m) =>
+                `- ${m.month}: Income ${currency} ${Number(m.income || 0).toFixed(2)}, Expense ${currency} ${Number(m.expense || 0).toFixed(2)}`
+            )
+            .join('\n')
+        : '- No previous month data available';
 
     const prompt = `You are a personal finance analyst.
 
-Analyze the user's monthly financial data and provide concise, actionable insights.
+Analyze the user's monthly financial data and provide a concise, useful financial health assessment.
 
 Financial data:
 Currency: ${currency}
@@ -63,29 +74,38 @@ Previous months:
 ${trendText}
 
 Instructions:
-- Identify the most important spending patterns.
-- Compare current performance with previous months when data is available.
-- Highlight unusually high spending categories.
-- Comment on the user's savings rate.
-- Give practical and realistic suggestions.
-- Do not invent or assume financial data.
-- Keep the response concise.
+- Base every observation ONLY on the financial data provided.
+- Calculate the healthScore based on the user's actual financial situation.
+- healthScore must be an integer from 0 to 100.
+- Identify the most important positive financial patterns.
+- Identify the most important concerns.
+- Identify the largest spending category when expense data exists.
+- Give practical recommendations based on the actual data.
+- Do not invent transactions, amounts, categories, or trends.
 - Do not provide investment, tax, or legal advice.
-- Return only valid JSON.
+- Keep the response concise.
+- Return ONLY valid JSON.
 - Do not use Markdown or code fences.
 
-Return exactly:
+Return exactly this JSON structure:
+
 {
-    "summary": "Short overall assessment",
-    "insights": [
-        "Important observation",
-        "Another important observation"
+    "summary": "Short overall assessment of the user's finances",
+    "healthScore": 0,
+    "topSpendingCategory": "Category name or null",
+    "highlights": [
+        "Positive financial observation"
+    ],
+    "concerns": [
+        "Important financial concern"
     ],
     "recommendations": [
-        "Specific actionable recommendation",
-        "Another actionable recommendation"
+        {
+            "title": "Short recommendation title",
+            "detail": "Specific actionable recommendation"
+        }
     ]
-}`
+}`;
 
     try {
         const response = await ai.chat.completions.create({
@@ -96,22 +116,71 @@ Return exactly:
                     content: prompt
                 }
             ],
-            temperature: 0.3,
+            temperature: 0.2,
             response_format: {
                 type: 'json_object'
             }
-        })
+        });
 
-        const text = response.choices[0].message.content
-        const cleaned = stripMarkdown(text)
+        const text = response.choices?.[0]?.message?.content;
 
-        return JSON.parse(cleaned)
+        if (!text) {
+            throw new Error('Groq returned an empty response');
+        }
+
+        const cleaned = stripMarkdown(text);
+        const parsed = JSON.parse(cleaned);
+
+        return {
+            summary: typeof parsed.summary === 'string'
+                ? parsed.summary
+                : 'Unable to generate a financial summary.',
+
+            healthScore: Math.max(
+                0,
+                Math.min(100, Number(parsed.healthScore) || 0)
+            ),
+
+            topSpendingCategory:
+                typeof parsed.topSpendingCategory === 'string'
+                    ? parsed.topSpendingCategory
+                    : null,
+
+            highlights: Array.isArray(parsed.highlights)
+                ? parsed.highlights.filter(
+                    (item) => typeof item === 'string' && item.trim()
+                )
+                : [],
+
+            concerns: Array.isArray(parsed.concerns)
+                ? parsed.concerns.filter(
+                    (item) => typeof item === 'string' && item.trim()
+                )
+                : [],
+
+            recommendations: Array.isArray(parsed.recommendations)
+                ? parsed.recommendations
+                    .filter(
+                        (item) =>
+                            item &&
+                            typeof item === 'object' &&
+                            typeof item.title === 'string' &&
+                            typeof item.detail === 'string'
+                    )
+                    .map((item) => ({
+                        title: item.title.trim(),
+                        detail: item.detail.trim()
+                    }))
+                : []
+        };
 
     } catch (error) {
-        console.error('Error generating insights:', error)
-        throw new Error('Failed to generate insights. Please try again later.')
+        console.error('Error generating monthly insight:', error);
+        throw new Error(
+            'Failed to generate monthly insight. Please try again later.'
+        );
     }
-}
+};
 
 export const generateBudgetAlert = async ({
     categoryName,
@@ -188,29 +257,42 @@ Return exactly:
 }
 
 export const generateSavingTips = async ({
-    topCategories = [],
-    monthlyIncome = 0,
+    totalIncome = 0,
+    totalExpense = 0,
+    savingsRate = 0,
+    expenseBreakdown = [],
     currency = 'INR'
 }) => {
+    const safeExpenseBreakdown = Array.isArray(expenseBreakdown)
+        ? expenseBreakdown
+        : [];
 
-    const categoriesText = topCategories.length > 0
-        ? topCategories
-            .map((category, index) =>
-                `${index + 1}. ${category.category}: ${currency} ${Number(category.amount).toFixed(2)} spent across ${category.transactionCount} transactions`
-            )
-            .join('\n')
-        : '- No significant expense categories found'
+    const breakdownText =
+        safeExpenseBreakdown.length > 0
+            ? safeExpenseBreakdown
+                  .map(
+                      (c) =>
+                          `- ${c.category || 'Uncategorized'}: ${currency} ${Number(
+                              c.amount || 0
+                          ).toFixed(2)} across ${Number(
+                              c.transactionCount || 0
+                          )} transactions`
+                  )
+                  .join('\n')
+            : '- No expense recorded yet';
 
     const prompt = `You are a personal finance assistant.
 
-Analyze the user's recent spending categories and income to generate practical, personalized saving tips.
+Analyze the user's recent spending and income to generate practical, personalized saving tips.
 
 Financial data:
 Currency: ${currency}
-Recent income: ${currency} ${Number(monthlyIncome).toFixed(2)}
+Recent income: ${currency} ${Number(totalIncome).toFixed(2)}
+Recent expenses: ${currency} ${Number(totalExpense).toFixed(2)}
+Savings rate: ${Number(savingsRate).toFixed(1)}%
 
 Top spending categories:
-${categoriesText}
+${breakdownText}
 
 Instructions:
 - Identify the categories with the greatest opportunity to reduce spending.
@@ -221,22 +303,25 @@ Instructions:
 - Do not recommend unrealistic spending cuts.
 - Do not provide investment, tax, or legal advice.
 - Keep the tips concise and easy to understand.
-- estimatedSavings must be a reasonable estimate based on the provided spending data.
+- estimatedSavings must be a conservative estimate based only on the provided category spending.
+- If a savings estimate cannot reasonably be derived from the provided data, return 0.
+- Never invent spending amounts.
 - Return ONLY valid JSON.
 - Do not use Markdown or code fences.
 
 Return exactly this JSON structure:
 {
-    "overallTip": "One concise overall recommendation based on the user's spending.",
+    "overallTip": "Short assessment of the user's saving potential",
     "tips": [
         {
             "category": "Expense category",
-            "title": "Short actionable title",
-            "detail": "Specific practical saving recommendation.",
-            "estimatedSavings": 0
+            "title": "Short actionable saving tip",
+            "detail": "Specific explanation of what the user should do",
+            "estimatedSavings": 0,
+            "priority": "high"
         }
     ]
-}`
+}`;
 
     try {
         const response = await ai.chat.completions.create({
@@ -247,22 +332,59 @@ Return exactly this JSON structure:
                     content: prompt
                 }
             ],
-            temperature: 0.3,
+            temperature: 0.2,
             response_format: {
                 type: 'json_object'
             }
-        })
+        });
 
-        const text = response.choices[0].message.content
-        const cleaned = stripMarkdown(text)
+        const text = response.choices?.[0]?.message?.content;
 
-        return JSON.parse(cleaned)
+        if (!text) {
+            throw new Error('Groq returned an empty response');
+        }
 
+        const parsed = JSON.parse(stripMarkdown(text));
+
+        return {
+            overallTip:
+                typeof parsed.overallTip === 'string'
+                    ? parsed.overallTip.trim()
+                    : '',
+
+            tips: Array.isArray(parsed.tips)
+                ? parsed.tips
+                      .filter(
+                          (tip) =>
+                              tip &&
+                              typeof tip === 'object' &&
+                              typeof tip.category === 'string' &&
+                              typeof tip.title === 'string' &&
+                              typeof tip.detail === 'string'
+                      )
+                      .map((tip) => ({
+                          category: tip.category.trim(),
+                          title: tip.title.trim(),
+                          detail: tip.detail.trim(),
+                          estimatedSavings: Math.max(
+                              0,
+                              Number(tip.estimatedSavings) || 0
+                          ),
+                          priority: ['high', 'medium', 'low'].includes(
+                              tip.priority
+                          )
+                              ? tip.priority
+                              : 'medium'
+                      }))
+                : []
+        };
     } catch (error) {
-        console.error('Error generating saving tips:', error)
-        throw new Error('Failed to generate saving tips. Please try again later.')
+        console.error('generateSavingTips error:', error);
+        throw new Error(
+            'Failed to generate saving tips. Please try again later.'
+        );
     }
-}
+};
 
 export const analyzeTransactionList = async ({
     transactions,

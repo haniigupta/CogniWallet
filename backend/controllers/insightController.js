@@ -72,7 +72,7 @@ const buildMonthlyInsight = async  (userId) => {
 
     const content = await generateMonthlyInsight ({
         totalIncome,
-        totalExpenses,
+        totalExpense : totalExpenses,
         savingsRate,
         expenseBreakdown: (row.breakdown || []).map(b => ({
             category: b.category,
@@ -91,44 +91,81 @@ const buildMonthlyInsight = async  (userId) => {
 
     return { content, periodStart, periodEnd }
 }
-
-const buildSavingTips = async  (userId) => {
-    const top = await pool.query (
-        `SELECT c.name AS category, SUM(t.amount) AS amount, COUNT(t.id) AS count
-        FROM transactions t
-        JOIN categories c ON c.id = t.category_id
-        WHERE t.user_id = $1
-            AND t.type = 'expense'
-            AND t.transaction_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '3 months'
-        GROUP BY c.name
-        ORDER BY amount DESC
-        LIMIT 5`,
+const buildSavingTips = async (userId) => {
+    const data = await pool.query(
+        `WITH financial_data AS (
+            SELECT
+                COALESCE(
+                    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END),
+                    0
+                ) AS income,
+                COALESCE(
+                    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END),
+                    0
+                ) AS expense
+            FROM transactions
+            WHERE user_id = $1
+                AND transaction_date >= CURRENT_DATE - INTERVAL '3 months'
+        ),
+        breakdown AS (
+            SELECT
+                COALESCE(c.name, 'Uncategorized') AS category,
+                SUM(t.amount) AS amount,
+                COUNT(t.id) AS transaction_count
+            FROM transactions t
+            LEFT JOIN categories c
+                ON c.id = t.category_id
+            WHERE t.user_id = $1
+                AND t.type = 'expense'
+                AND t.transaction_date >= CURRENT_DATE - INTERVAL '3 months'
+            GROUP BY COALESCE(c.name, 'Uncategorized')
+            ORDER BY amount DESC
+            LIMIT 5
+        )
+        SELECT
+            (SELECT income FROM financial_data) AS income,
+            (SELECT expense FROM financial_data) AS expense,
+            (
+                SELECT COALESCE(json_agg(breakdown), '[]'::json)
+                FROM breakdown
+            ) AS breakdown`,
         [userId]
-    )
+    );
 
-    const incomeResult = await pool.query (
-        `SELECT COALESCE(SUM(amount), 0) AS total_income
-        FROM transactions
-        WHERE user_id = $1
-            AND type = 'income'
-            AND transaction_date >=  CURRENT_DATE - INTERVAL '30 days'`,
-        [userId]
-    )
+    const row = data.rows[0];
 
-    const currency = await getUserCurrency(userId)
+    const totalIncome = parseFloat(row.income || 0);
+    const totalExpense = parseFloat(row.expense || 0);
 
-    const content = await generateSavingTips ({
-        topCategories: top.rows.map(r => ({
-            category: r.category,
-            amount: parseFloat(r.amount),
-            transactionCount: parseInt(r.count, 10)
-        })),
-        monthlyIncome: parseFloat(incomeResult.rows[0].total_income),
+    const savingsRate =
+        totalIncome > 0
+            ? ((totalIncome - totalExpense) / totalIncome) * 100
+            : 0;
+
+    const expenseBreakdown = Array.isArray(row.breakdown)
+        ? row.breakdown.map((item) => ({
+              category: item.category,
+              amount: parseFloat(item.amount || 0),
+              transactionCount: parseInt(item.transaction_count || 0, 10),
+          }))
+        : [];
+
+    const currency = await getUserCurrency(userId);
+
+    const content = await generateSavingTips({
+        totalIncome,
+        totalExpense,
+        savingsRate,
+        expenseBreakdown,
         currency,
-    })
+    });
 
-    return { content, periodStart: null, periodEnd: null }
-}
+    return {
+        content,
+        periodStart: null,
+        periodEnd: null,
+    };
+};
 
 const buildBudgetALert = async  (userId, categoryId) => {
     if(!categoryId) {
