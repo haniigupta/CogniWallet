@@ -25,7 +25,7 @@ https://cogni-wallet.vercel.app/login
 
 **Backend:** Node.js, Express.js, PostgreSQL, JWT
 
-**AI:** Groq API, `openai/gpt-oss-20b`
+**AI:** Groq API 
 
 **Deployment:** Vercel, Render, Neon PostgreSQL
 
