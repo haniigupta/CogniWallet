@@ -13,7 +13,7 @@ import Spinner from '../components/Spinner.jsx';
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const currency = user?.currency || 'USD';
+    const currency = user?.currency || 'INR';
     const [summary, setSummary] = useState(null);
     const [trend, setTrend] = useState([]);
     const [breakdown, setBreakdown] = useState([]);

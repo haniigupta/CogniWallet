@@ -221,7 +221,7 @@ const SavingsTipsView = ({ c }) => {
 
             {totalSavings > 0 && (
                 <div className="grid grid-cols-2 gap-3">
-                    <Stat label="Total potential" value={`$${totalSavings.toFixed(0)}/mo`} accent="emerald" />
+                    <Stat label="Total potential" value={`₹${totalSavings.toFixed(0)}/mo`} accent="emerald" />
                     <Stat label="Tips" value={c.tips?.length || 0} accent="violet" />
                 </div>
             )}

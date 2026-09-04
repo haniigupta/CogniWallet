@@ -60,7 +60,7 @@ const AnalysisSkeleton = () => (
 
 const Budgets = () => {
     const { user } = useAuth();
-    const currency = user?.currency || 'USD';
+    const currency = user?.currency || 'INR';
     const [budgets, setBudgets] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -68,106 +68,106 @@ const Budgets = () => {
     const [editing, setEditing] = useState(null);
     const [analyses, setAnalyses] = useState({});
     const [analyzing, setAnalyzing] = useState(true);
-  
+
 
     const fetchData = async () => {
-    try {
-        setLoading(true);
+        try {
+            setLoading(true);
 
-        const [bRes, cRes] = await Promise.all([
-            api.get(API_PATHS.BUDGETS.LIST),
-            api.get(API_PATHS.CATEGORIES.LIST),
-        ]);
+            const [bRes, cRes] = await Promise.all([
+                api.get(API_PATHS.BUDGETS.LIST),
+                api.get(API_PATHS.CATEGORIES.LIST),
+            ]);
 
-        const loadedBudgets = bRes.data;
+            const loadedBudgets = bRes.data;
 
-        setBudgets(loadedBudgets);
-        setCategories(cRes.data);
+            setBudgets(loadedBudgets);
+            setCategories(cRes.data);
 
-        if (loadedBudgets.length > 0) {
-            await analyzeAll(loadedBudgets);
-        } else {
-            setAnalyses({});
+            if (loadedBudgets.length > 0) {
+                await analyzeAll(loadedBudgets);
+            } else {
+                setAnalyses({});
+                setAnalyzing(false);
+            }
+        } catch (err) {
+            toast.error('Failed to load budgets');
             setAnalyzing(false);
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        toast.error('Failed to load budgets');
-        setAnalyzing(false);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     const analyzeAll = async (budgetList = budgets) => {
-    setAnalyses({});
-    setAnalyzing(true);
+        setAnalyses({});
+        setAnalyzing(true);
 
-    try {
-        const res = await api.post(API_PATHS.BUDGETS.ANALYZE);
+        try {
+            const res = await api.post(API_PATHS.BUDGETS.ANALYZE);
 
-        console.log('Budget analysis response:', res.data);
+            console.log('Budget analysis response:', res.data);
 
-        // Support either { insights: [...] } or { analyses: [...] }
-        // and also a nested { data: { insights: [...] } } response.
-        const responseData = res.data?.data || res.data;
+            // Support either { insights: [...] } or { analyses: [...] }
+            // and also a nested { data: { insights: [...] } } response.
+            const responseData = res.data?.data || res.data;
 
-        const insights =
-            responseData?.insights ||
-            responseData?.analyses ||
-            [];
+            const insights =
+                responseData?.insights ||
+                responseData?.analyses ||
+                [];
 
-        const map = {};
+            const map = {};
 
-        insights.forEach((insight) => {
-            // Best case: backend gives us the budget ID directly
-            if (insight.budgetId != null) {
-                map[insight.budgetId] = insight;
-                return;
-            }
+            insights.forEach((insight) => {
+                // Best case: backend gives us the budget ID directly
+                if (insight.budgetId != null) {
+                    map[insight.budgetId] = insight;
+                    return;
+                }
 
-            // Otherwise match using category name
-            const insightCategory = (
-                insight.category ||
-                insight.category_name ||
-                insight.categoryName ||
-                ''
-            )
-                .trim()
-                .toLowerCase();
-
-            const budget = budgetList.find((b) => {
-                const budgetCategory = (b.category_name || '')
+                // Otherwise match using category name
+                const insightCategory = (
+                    insight.category ||
+                    insight.category_name ||
+                    insight.categoryName ||
+                    ''
+                )
                     .trim()
                     .toLowerCase();
 
-                return budgetCategory === insightCategory;
+                const budget = budgetList.find((b) => {
+                    const budgetCategory = (b.category_name || '')
+                        .trim()
+                        .toLowerCase();
+
+                    return budgetCategory === insightCategory;
+                });
+
+                if (budget) {
+                    map[budget.id] = insight;
+                }
             });
 
-            if (budget) {
-                map[budget.id] = insight;
-            }
-        });
+            console.log('Mapped budget analyses:', map);
 
-        console.log('Mapped budget analyses:', map);
+            setAnalyses(map);
+        } catch (err) {
+            console.error(
+                'Failed to analyze budgets:',
+                err.response?.data || err
+            );
 
-        setAnalyses(map);
-    } catch (err) {
-        console.error(
-            'Failed to analyze budgets:',
-            err.response?.data || err
-        );
-
-        toast.error(
-            err.response?.data?.message ||
-            'Failed to analyze budgets'
-        );
-    } finally {
-        setAnalyzing(false);
-    }
-};
-   useEffect(() => {
-    fetchData();
-}, []);
+            toast.error(
+                err.response?.data?.message ||
+                'Failed to analyze budgets'
+            );
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+    useEffect(() => {
+        fetchData();
+    }, []);
 
 
 
@@ -191,10 +191,10 @@ const Budgets = () => {
             toast.error('Failed to delete');
         }
     };
-const onSaved = async () => {
-    setModalOpen(false);
-    await fetchData();
-};
+    const onSaved = async () => {
+        setModalOpen(false);
+        await fetchData();
+    };
 
     const hasAnalyses = Object.keys(analyses).length > 0;
 

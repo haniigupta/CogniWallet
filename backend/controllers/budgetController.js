@@ -1,8 +1,8 @@
 import pool from '../db.js'
 import { analyzeBudgetList } from '../utils/groq.js'
 
-export const getBudgets = async (req , res )=>{
-    
+export const getBudgets = async (req, res) => {
+
     try {
 
         const result = await pool.query(
@@ -33,24 +33,24 @@ export const getBudgets = async (req , res )=>{
         )
         res.json(result.rows)
 
-    } catch (error){
+    } catch (error) {
         console.error('getBudgets error', error)
-        res.status(500).json({message: 'Server error'})
+        res.status(500).json({ message: 'Server error' })
     }
 }
 
-export const createBudget = async  (req, res) => {
-    const {categoryId, amount, period = 'monthly', startDate } = req.body
+export const createBudget = async (req, res) => {
+    const { categoryId, amount, period = 'monthly', startDate } = req.body
 
-    if(!categoryId || !amount){
+    if (!categoryId || !amount) {
         return res.status(400).json({
-            message : 'categoryId and amount are required!'
+            message: 'categoryId and amount are required!'
         })
     }
 
-    if(!['monthly', 'weekly'].includes(period)) {
-        return res.status(400).json ({
-            message : 'Period must be monthly or weekly!'
+    if (!['monthly', 'weekly'].includes(period)) {
+        return res.status(400).json({
+            message: 'Period must be monthly or weekly!'
         })
     }
 
@@ -62,20 +62,20 @@ export const createBudget = async  (req, res) => {
 
         const result = await pool.query(
             `INSERT INTO budgets (user_id, category_id, amount, period, start_date)
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES (₹${idx++}, ₹${idx++}, ₹${idx++}, ₹${idx++}, ₹${idx++})
             RETURNING *`,
-            [req.userId , categoryId, amount, period , effectiveStart]
+            [req.userId, categoryId, amount, period, effectiveStart]
         )
         res.status(201).json(result.rows[0])
 
-    } catch(error){
-        if(error.code === '23505'){
+    } catch (error) {
+        if (error.code === '23505') {
             return res.status(400).json({
-                message : 'Budget already exists for this category and period'
+                message: 'Budget already exists for this category and period'
             })
         }
         console.error('createBudget error', error)
-        res.status(500).json ({ message : 'Server error'})
+        res.status(500).json({ message: 'Server error' })
     }
 }
 
@@ -92,17 +92,17 @@ export const updateBudget = async (req, res) => {
                 period = COALESCE($2, period)
             WHERE id = $3 AND user_id = $4
             RETURNING *`,
-            [amount, period , id, req.userId]
+            [amount, period, id, req.userId]
         )
 
-        if(result.rows.length === 0){
-            return res.status(404).json({ message  : 'Budget not found'})
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Budget not found' })
         }
         res.json(result.rows[0])
 
-    } catch(error){
+    } catch (error) {
         console.error('update Budget error', error)
-        res.status(500).json({ message : 'Server error '})
+        res.status(500).json({ message: 'Server error ' })
     }
 }
 
@@ -110,17 +110,17 @@ export const deleteBudget = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await pool.query (
+        const result = await pool.query(
             'DELETE FROM budgets WHERE id = $1 AND user_id = $2 RETURNING id',
             [id, req.userId]
         )
-        if(result.rows.length === 0 ){
-            return res.status(404).json({ message : 'Budget not found!'})
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Budget not found!' })
         }
-        res.json({ message : 'Budget deleted'})
-    } catch (error){
+        res.json({ message: 'Budget deleted' })
+    } catch (error) {
         console.error('deletBudget error', error)
-        res.status(500).json({ message : 'Server error'})
+        res.status(500).json({ message: 'Server error' })
     }
 }
 
@@ -161,7 +161,7 @@ export const analyzeBudgets = async (req, res) => {
             [req.userId]
         );
 
-        const currency = userRes.rows[0]?.currency || 'USD';
+        const currency = userRes.rows[0]?.currency || 'INR';
 
         // Convert database fields into the format expected by Groq
         const budgetData = result.rows.map((b) => {

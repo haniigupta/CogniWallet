@@ -9,27 +9,27 @@ export const getTransactions = async (req , res)=>{
     let idx = 2
 
     if(startDate){
-        conditions.push(`t.transaction_date >= $${idx++}`)
+        conditions.push(`t.transaction_date >= ₹${idx++}`)
         values.push(startDate)
     }
 
     if(endDate){
-        conditions.push(`t.transaction_date <= $${idx++}`)
+        conditions.push(`t.transaction_date <= ₹${idx++}`)
         values.push(endDate)
     }
 
     if(categoryId){
-        conditions.push(`t.category_id = $${idx++}`)
+        conditions.push(`t.category_id = ₹${idx++}`)
         values.push(categoryId)
     }
 
     if(type){
-        conditions.push(`t.type = $${idx++}`)
+        conditions.push(`t.type = ₹${idx++}`)
         values.push(type)
     }
 
     if(search){
-        conditions.push(`t.description ILIKE $${idx} OR t.notes ILIKE $${idx}`)
+        conditions.push(`t.description ILIKE ₹${idx} OR t.notes ILIKE ₹${idx}`)
         values.push(`%${search}%`)
         idx++
     }
@@ -47,7 +47,7 @@ export const getTransactions = async (req , res)=>{
             LEFT JOIN categories c ON t.category_id = c.id
             WHERE ${conditions.join(' AND ')}
             ORDER BY t.transaction_date DESC, t.id DESC
-            LIMIT $${idx++} OFFSET $${idx}`,
+            LIMIT ₹${idx++} OFFSET ₹${idx}`,
             values
         )
         res.json(result.rows)

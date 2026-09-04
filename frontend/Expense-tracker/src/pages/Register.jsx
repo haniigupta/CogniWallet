@@ -7,7 +7,7 @@ import AuthHero from '../components/AuthHero.jsx';
 import Spinner from '../components/Spinner.jsx';
 
 const CURRENCIES = [
-    { value: 'USD', label: 'USD - US Dollar' },
+    { value: 'INR', label: 'INR - US Dollar' },
     { value: 'EUR', label: 'EUR - Euro' },
     { value: 'GBP', label: 'GBP - British Pound' },
     { value: 'INR', label: 'INR - Indian Rupee' },
@@ -23,7 +23,7 @@ const Register = () => {
         name: '',
         email: '',
         password: '',
-        currency: 'USD',
+        currency: 'INR',
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);

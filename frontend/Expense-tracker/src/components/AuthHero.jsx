@@ -17,7 +17,7 @@ const BalanceCard = () => (
             <div className="text-xs font-medium opacity-80">Total Balance</div>
             <Wallet size={16} className="opacity-80" />
         </div>
-        <div className="relative text-3xl font-bold tracking-tight">$12,547.30</div>
+        <div className="relative text-3xl font-bold tracking-tight">₹12,547.30</div>
         <div className="relative flex items-center gap-1.5 mt-2 text-xs">
             <TrendingUp size={11} />
             <span className="font-semibold">+8.2%</span>
@@ -38,7 +38,7 @@ const AIInsightCard = () => (
                 </div>
                 <div className="text-xs font-semibold text-slate-900 mb-0.5">Coffee budget alert</div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Cut 2 cups/week → save $32/mo
+                    Cut 2 cups/week → save ₹32/mo
                 </p>
             </div>
         </div>
@@ -57,8 +57,8 @@ const BudgetProgressCard = () => (
             </div>
         </div>
         <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-base font-bold text-slate-900">$320</span>
-            <span className="text-[10px] text-slate-500">of $400</span>
+            <span className="text-base font-bold text-slate-900">₹320</span>
+            <span className="text-[10px] text-slate-500">of ₹400</span>
         </div>
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full bg-amber-500 rounded-full" style={{ width: '80%' }} />
@@ -74,9 +74,9 @@ const SubscriptionsCard = () => (
         </div>
         <div className="space-y-2.5">
             {[
-                { name: 'Netflix', cost: '$15.99', initial: 'N', color: 'bg-rose-500' },
-                { name: 'Spotify', cost: '$10.99', initial: 'S', color: 'bg-emerald-500' },
-                { name: 'iCloud+', cost: '$2.99', initial: 'i', color: 'bg-blue-500' },
+                { name: 'Netflix', cost: '₹15.99', initial: 'N', color: 'bg-rose-500' },
+                { name: 'Spotify', cost: '₹10.99', initial: 'S', color: 'bg-emerald-500' },
+                { name: 'iCloud+', cost: '₹2.99', initial: 'i', color: 'bg-blue-500' },
             ].map((s) => (
                 <div key={s.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -100,11 +100,11 @@ const IncomeExpenseCard = () => (
         <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <div className="text-[10px] text-slate-500">Income</div>
-                <div className="text-base font-bold text-violet-600">$6.3k</div>
+                <div className="text-base font-bold text-violet-600">₹6.3k</div>
             </div>
             <div>
                 <div className="text-[10px] text-slate-500">Expense</div>
-                <div className="text-base font-bold text-orange-600">$2.4k</div>
+                <div className="text-base font-bold text-orange-600">₹2.4k</div>
             </div>
         </div>
         <div className="flex items-end gap-1 h-10">
@@ -126,7 +126,7 @@ const MonthlySummaryCard = () => (
                 Healthy
             </span>
         </div>
-        <div className="text-2xl font-bold tracking-tight text-slate-900 mb-1">$3,936</div>
+        <div className="text-2xl font-bold tracking-tight text-slate-900 mb-1">₹3,936</div>
         <div className="text-[10px] text-slate-500">Net this month</div>
         <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full bg-linear-to-r from-violet-500 to-violet-700 rounded-full" style={{ width: '62%' }} />
@@ -140,9 +140,9 @@ const RecentTransactionsCard = () => (
         <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-3">Recent</div>
         <div className="space-y-2.5">
             {[
-                { icon: ShoppingBag, color: 'bg-blue-50 text-blue-600', name: 'Whole Foods', amount: '-$87.00' },
-                { icon: Coffee, color: 'bg-amber-50 text-amber-600', name: 'Starbucks', amount: '-$6.45' },
-                { icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600', name: 'Salary', amount: '+$5,500', positive: true },
+                { icon: ShoppingBag, color: 'bg-blue-50 text-blue-600', name: 'Whole Foods', amount: '-₹87.00' },
+                { icon: Coffee, color: 'bg-amber-50 text-amber-600', name: 'Starbucks', amount: '-₹6.45' },
+                { icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600', name: 'Salary', amount: '+₹5,500', positive: true },
             ].map((t, i) => (
                 <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
@@ -176,9 +176,9 @@ const CategoryDonutCard = () => (
             </div>
             <div className="space-y-1.5 flex-1 min-w-0">
                 {[
-                    { name: 'Food', value: '$320', color: 'bg-violet-500' },
-                    { name: 'Rent', value: '$1.8k', color: 'bg-orange-500' },
-                    { name: 'Travel', value: '$240', color: 'bg-blue-500' },
+                    { name: 'Food', value: '₹320', color: 'bg-violet-500' },
+                    { name: 'Rent', value: '₹1.8k', color: 'bg-orange-500' },
+                    { name: 'Travel', value: '₹240', color: 'bg-blue-500' },
                 ].map((c) => (
                     <div key={c.name} className="flex items-center justify-between text-[10px]">
                         <div className="flex items-center gap-1.5">
@@ -201,11 +201,11 @@ const SavingsGoalCard = () => (
             </div>
             <div>
                 <div className="text-xs font-semibold text-slate-900">Vacation Fund</div>
-                <div className="text-[10px] text-slate-500">Goal: $5,000</div>
+                <div className="text-[10px] text-slate-500">Goal: ₹5,000</div>
             </div>
         </div>
         <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-lg font-bold tracking-tight text-slate-900">$3,240</span>
+            <span className="text-lg font-bold tracking-tight text-slate-900">₹3,240</span>
             <span className="text-[10px] text-emerald-600 font-bold">65%</span>
         </div>
         <div className="h-1.5 bg-white rounded-full overflow-hidden">
@@ -224,7 +224,7 @@ const UpcomingBillCard = () => (
                 <div className="text-[10px] uppercase tracking-wider text-rose-600 font-bold">Due in 2 days</div>
                 <div className="text-xs font-semibold text-slate-900">Rent payment</div>
             </div>
-            <div className="text-sm font-bold text-slate-900">$1,800</div>
+            <div className="text-sm font-bold text-slate-900">₹1,800</div>
         </div>
     </div>
 );
@@ -235,9 +235,9 @@ const PortfolioCard = () => (
             <div className="text-[10px] uppercase tracking-wider opacity-60 font-bold">Investments</div>
             <Receipt size={12} className="opacity-60" />
         </div>
-        <div className="text-2xl font-bold tracking-tight mb-1">$8,420.55</div>
+        <div className="text-2xl font-bold tracking-tight mb-1">₹8,420.55</div>
         <div className="flex items-center gap-1.5 text-[11px]">
-            <span className="text-emerald-400 font-semibold">+$182.30</span>
+            <span className="text-emerald-400 font-semibold">+₹182.30</span>
             <span className="opacity-50">today</span>
         </div>
         <div className="mt-3 h-10">

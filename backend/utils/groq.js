@@ -270,15 +270,15 @@ export const generateSavingTips = async ({
     const breakdownText =
         safeExpenseBreakdown.length > 0
             ? safeExpenseBreakdown
-                  .map(
-                      (c) =>
-                          `- ${c.category || 'Uncategorized'}: ${currency} ${Number(
-                              c.amount || 0
-                          ).toFixed(2)} across ${Number(
-                              c.transactionCount || 0
-                          )} transactions`
-                  )
-                  .join('\n')
+                .map(
+                    (c) =>
+                        `- ${c.category || 'Uncategorized'}: ${currency} ${Number(
+                            c.amount || 0
+                        ).toFixed(2)} across ${Number(
+                            c.transactionCount || 0
+                        )} transactions`
+                )
+                .join('\n')
             : '- No expense recorded yet';
 
     const prompt = `You are a personal finance assistant.
@@ -354,28 +354,28 @@ Return exactly this JSON structure:
 
             tips: Array.isArray(parsed.tips)
                 ? parsed.tips
-                      .filter(
-                          (tip) =>
-                              tip &&
-                              typeof tip === 'object' &&
-                              typeof tip.category === 'string' &&
-                              typeof tip.title === 'string' &&
-                              typeof tip.detail === 'string'
-                      )
-                      .map((tip) => ({
-                          category: tip.category.trim(),
-                          title: tip.title.trim(),
-                          detail: tip.detail.trim(),
-                          estimatedSavings: Math.max(
-                              0,
-                              Number(tip.estimatedSavings) || 0
-                          ),
-                          priority: ['high', 'medium', 'low'].includes(
-                              tip.priority
-                          )
-                              ? tip.priority
-                              : 'medium'
-                      }))
+                    .filter(
+                        (tip) =>
+                            tip &&
+                            typeof tip === 'object' &&
+                            typeof tip.category === 'string' &&
+                            typeof tip.title === 'string' &&
+                            typeof tip.detail === 'string'
+                    )
+                    .map((tip) => ({
+                        category: tip.category.trim(),
+                        title: tip.title.trim(),
+                        detail: tip.detail.trim(),
+                        estimatedSavings: Math.max(
+                            0,
+                            Number(tip.estimatedSavings) || 0
+                        ),
+                        priority: ['high', 'medium', 'low'].includes(
+                            tip.priority
+                        )
+                            ? tip.priority
+                            : 'medium'
+                    }))
                 : []
         };
     } catch (error) {
@@ -388,7 +388,7 @@ Return exactly this JSON structure:
 
 export const analyzeTransactionList = async ({
     transactions,
-    currency = 'USD'
+    currency = 'INR'
 }) => {
 
     const transactionText = transactions.length > 0
