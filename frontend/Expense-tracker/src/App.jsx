@@ -12,17 +12,18 @@ import Insights from './pages/Insights.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Layout from './components/Layout.jsx';
 
+
 const App = () => {
     return (
         <Routes>
 
-            {/* Public Landing Page */}
+            {/* PUBLIC ROUTES */}
+
             <Route
                 path="/"
                 element={<LandingPage />}
             />
 
-            {/* Public Auth Pages */}
             <Route
                 path="/login"
                 element={<Login />}
@@ -33,7 +34,9 @@ const App = () => {
                 element={<Register />}
             />
 
-            {/* Protected App Routes */}
+
+            {/* PROTECTED ROUTES */}
+
             <Route
                 element={
                     <ProtectedRoute>
@@ -41,6 +44,7 @@ const App = () => {
                     </ProtectedRoute>
                 }
             >
+
                 <Route
                     path="/dashboard"
                     element={<Dashboard />}
@@ -65,9 +69,12 @@ const App = () => {
                     path="/insights"
                     element={<Insights />}
                 />
+
             </Route>
 
-            {/* Unknown Routes */}
+
+            {/* FALLBACK */}
+
             <Route
                 path="*"
                 element={<Navigate to="/" replace />}
@@ -76,5 +83,6 @@ const App = () => {
         </Routes>
     );
 };
+
 
 export default App;
