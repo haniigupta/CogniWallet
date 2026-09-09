@@ -2,9 +2,54 @@
 @import "tailwindcss";
 
 @theme {
-    --font-sans: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    /* --font-sans: "Inter", "Inter var", ui-sans-serif, system-ui, -apple-system,
-        Segoe UI, Roboto, sans-serif; */
+
+    --font-sans:
+        'Google Sans',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-destructive: var(--destructive);
+}
+
+:root {
+    --background: #faf9ff;
+    --foreground: #1e1b2e;
+
+    --card: #ffffff;
+    --card-foreground: #1e1b2e;
+
+    --primary: #7c3aed;
+    --primary-foreground: #ffffff;
+
+    --muted: #f4f1fa;
+    --muted-foreground: #6b657a;
+
+    --border: #e6e1ed;
+    --input: #e6e1ed;
+    --ring: #7c3aed;
+
+    --destructive: #dc2626;
+
+    --radius: 0.75rem;
 }
 
 html,
@@ -29,4 +74,51 @@ body {
 @keyframes scrollDown {
     from { transform: translateY(-33.3333%); }
     to { transform: translateY(0); }
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-7px);
+    }
+}
+
+.animate-fade-up {
+    animation: fade-up 700ms ease-out both;
+}
+
+.animate-float {
+    animation: float 5s ease-in-out infinite;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+
 }
