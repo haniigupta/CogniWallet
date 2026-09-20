@@ -17,7 +17,7 @@ const navItems = [
     { to: '/budgets', label: 'Budgets', icon: Target },
     { to: '/insights', label: 'AI Insights', icon: Sparkles },
 ];
-
+// sidebar component with navigation links and user info
 const Sidebar = () => {
     const { user, logout } = useAuth();
     const initial = user?.name?.[0]?.toUpperCase() || 'U';
