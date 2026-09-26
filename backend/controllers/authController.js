@@ -134,3 +134,128 @@ export const getMe = async (req, res) => {
         res.status(500).json({ message: 'Server error'})
     }
 }
+
+export const updateProfile = async (req, res) => {
+    const { name, email, currency } = req.body;
+
+    if (!name || !email) {
+        return res.status(400).json({
+            message: 'Name and email are required!'
+        });
+    }
+
+    try {
+        // Check whether another user is already using this email
+        const existingUser = await pool.query(
+            'SELECT id FROM users WHERE email = $1 AND id != $2',
+            [email, req.userId]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({
+                message: 'Email is already registered by another user'
+            });
+        }
+
+        const result = await pool.query(
+            `UPDATE users
+             SET name = $1,
+                 email = $2,
+                 currency = $3
+             WHERE id = $4
+             RETURNING id, name, email, currency, created_at`,
+            [
+                name.trim(),
+                email.trim(),
+                currency || 'INR',
+                req.userId
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'User not found!'
+            });
+        }
+
+        res.json({
+            message: 'Profile updated successfully',
+            user: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Update Profile Error', error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+};
+
+
+export const changePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+            message: 'Current password and new password are required!'
+        });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({
+            message: 'New password must be at least 6 characters long!'
+        });
+    }
+
+    try {
+        // Get the current password hash
+        const result = await pool.query(
+            'SELECT password_hash FROM users WHERE id = $1',
+            [req.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'User not found!'
+            });
+        }
+
+        const user = result.rows[0];
+
+        // Verify current password
+        const passwordMatch = await bcrypt.compare(
+            currentPassword,
+            user.password_hash
+        );
+
+        if (!passwordMatch) {
+            return res.status(400).json({
+                message: 'Current password is incorrect'
+            });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const newPasswordHash = await bcrypt.hash(
+            newPassword,
+            salt
+        );
+
+        await pool.query(
+            'UPDATE users SET password_hash = $1 WHERE id = $2',
+            [newPasswordHash, req.userId]
+        );
+
+        res.json({
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+        console.error('Change Password Error', error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+};
