@@ -1,14 +1,20 @@
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
-
-![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js)
-
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql)
-
-![Groq](https://img.shields.io/badge/Groq-GPT--OSS--20B-orange)
-
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios-API-5A29E4?logo=axios&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-REST_API-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![Neon](https://img.shields.io/badge/Neon-PostgreSQL-00E599?logo=postgresql&logoColor=black)
 ![JWT](https://img.shields.io/badge/Auth-JWT-purple)
-
+![Groq](https://img.shields.io/badge/Groq-GPT--OSS--20B-orange)
+![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18?logo=vitest&logoColor=white)
+![Supertest](https://img.shields.io/badge/Test-Supertest-FF6C37)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=black)
 ![License](https://img.shields.io/badge/License-MIT-blue)
+
 
 # 💰 CogniWallet
 
@@ -157,40 +163,6 @@ CogniWallet is deployed using:
 - **Backend:** Render
 - **Database:** Neon PostgreSQL
 - **AI:** Groq API
-
----
-
-### 📅 Monthly Financial Summary
-
-Generates a financial summary using the user's income, expenses, savings rate, category-wise spending, and previous financial data.
-
-### 💡 Personalized Saving Tips
-
-Analyzes recent financial activity and generates practical saving suggestions based on the user's spending patterns.
-
-### 🚨 Budget Alerts
-
-Analyzes current spending against category budgets and generates budget-related alerts.
-
-### 💬 Financial Assistant
-
-Allows users to ask natural-language questions about their personal financial activity.
-
-Example questions:
-
-```text
-Why am I spending so much?
-
-Where am I spending the most?
-
-How can I save money?
-
-What changed since last month?
-```
-
-The backend retrieves the relevant financial data from PostgreSQL before sending structured context to the LLM.
-
-The AI is responsible for interpreting and explaining the financial data, while PostgreSQL remains the source of truth for the underlying financial records.
 
 ---
 
