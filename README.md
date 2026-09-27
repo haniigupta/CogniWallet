@@ -1,55 +1,145 @@
-# CogniWallet
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 
-> AI-powered personal finance and expense management application.
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js)
 
-CogniWallet helps users track income and expenses, manage budgets, and get AI-powered insights into their spending.
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql)
 
-## 🚀 Live Demo
+![Groq](https://img.shields.io/badge/Groq-GPT--OSS--20B-orange)
 
-https://cogni-wallet.vercel.app/login
+![JWT](https://img.shields.io/badge/Auth-JWT-purple)
+
+![License](https://img.shields.io/badge/License-MIT-blue)
+
+# 💰 CogniWallet
+
+CogniWallet is a full-stack AI-powered personal finance and expense management application built using React, Node.js, Express.js, and PostgreSQL.
+
+The platform allows users to track income and expenses, manage categories and budgets, analyze spending patterns, and receive AI-powered financial insights using Groq's GPT-OSS-20B model.
+
+---
 
 ## ✨ Features
 
-* JWT-based authentication
-* Income and expense tracking
-* Category-based transactions
-* Weekly and monthly budgets
-* Financial dashboard and spending insights
-* AI-powered budget analysis and spending alerts
-* Personalized saving tips
-* Responsive UI
+- 🔐 JWT Authentication
+- 💰 Income & Expense Tracking
+- 🏷️ Category-based Transactions
+- 📊 Financial Dashboard
+- 💳 Weekly & Monthly Budgets
+- 📈 Spending Analytics
+- 🤖 AI-powered Financial Insights
+- 💡 Personalized Saving Tips
+- 🚨 Budget Alerts
+- 📅 Monthly Financial Summaries
+- 💬 AI Financial Assistant
+- 📱 Responsive UI
+
+---
+
+## 🏗️ System Architecture
+
+<p align="center">
+  <img src="./docs/CogniWallet System Architecture.svg" alt="CogniWallet System Architecture" width="1000"/>
+</p>
+
+### 🤖 AI Financial Assistant
+
+CogniWallet uses a data-grounded AI approach for its Financial Assistant.
+
+The LLM does not directly access the PostgreSQL database. Instead, the backend retrieves the authenticated user's financial data, prepares structured context, and sends it to Groq for generating natural-language financial insights.
+
+```text
+User Question
+      ↓
+React Frontend
+      ↓
+Node.js + Express
+      ↓
+PostgreSQL
+      ↓
+User Financial Data
+      ↓
+Structured Financial Context
+      ↓
+Groq — GPT-OSS-20B
+      ↓
+AI Answer + Suggestions
+      ↓
+React Frontend
+```
+
+---
 
 ## 🛠️ Tech Stack
 
-**Frontend:** React, Vite, Tailwind CSS, Axios, Lucide React
+### Frontend
 
-**Backend:** Node.js, Express.js, PostgreSQL, JWT
-
-**AI:** Groq API 
-
-**Deployment:** Vercel, Render, Neon PostgreSQL
-
-## ⚙️ Local Setup
+- React 19
+- Vite
+- Tailwind CSS
+- Axios
+- Lucide React
 
 ### Backend
 
+- Node.js
+- Express.js
+- REST APIs
+- JWT Authentication
+- bcryptjs
+
+### Database
+
+- PostgreSQL
+- Neon PostgreSQL
+- SQL-based financial analytics
+
+### AI Stack
+
+- Groq API
+- GPT-OSS-20B
+- Data-Grounded LLM
+- AI Financial Assistant
+
+### Testing
+
+- Vitest
+- Supertest
+
+### Deployment
+
+- Vercel
+- Render
+- Neon PostgreSQL
+- Groq API
+
+---
+
+## 🚀 Live Demo
+
+[https://cogni-wallet.vercel.app/login](https://cogni-wallet.vercel.app/login)
+
+---
+
+# 🚀 Getting Started
+
+## Clone Repository
+
 ```bash
 git clone https://github.com/haniigupta/CogniWallet.git
-cd CogniWallet/backend
+cd CogniWallet
+```
+
+## Backend
+
+```bash
+cd backend
 npm install
-npm start
+npm run dev
 ```
 
-Create `backend/.env`:
+## Frontend
 
-```env
-PORT=8000
-DATABASE_URL=your_postgresql_url
-JWT_SECRET=your_jwt_secret
-GROQ_API_KEY=your_groq_api_key
-```
-
-### Frontend
+Open a new terminal:
 
 ```bash
 cd frontend/Expense-tracker
@@ -57,14 +147,211 @@ npm install
 npm run dev
 ```
 
+---
+
+## 🔑 Environment Variables
+
+### Backend
+
+Create `backend/.env`:
+
+```env
+PORT=8000
+DATABASE_URL=
+JWT_SECRET=
+GROQ_API_KEY=
+```
+
+### Frontend
+
 Create `frontend/Expense-tracker/.env`:
 
 ```env
 VITE_API_URL=http://localhost:8000/api
 ```
 
-## 👨‍💻 Author
+---
 
-**Hani Gupta**
+## 🧪 Testing
 
-[GitHub](https://github.com/haniigupta)
+The backend uses Vitest and Supertest for API testing.
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+Current tests cover:
+
+- Server health check
+- Registration validation
+- Password validation
+- Login validation
+- JWT authentication
+- Protected routes
+- Invalid JWT token handling
+
+---
+
+## 🌐 Deployment
+
+CogniWallet is deployed using:
+
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Database:** Neon PostgreSQL
+- **AI:** Groq API
+
+Production flow:
+
+```text
+User
+  ↓
+Vercel
+React + Vite Frontend
+  ↓
+Render
+Node.js + Express Backend
+  ↓
+ ┌─────────────────┐
+ │                 │
+ ▼                 ▼
+Neon PostgreSQL   Groq API
+                  GPT-OSS-20B
+```
+
+---
+
+## 📁 Project Structure
+
+```text
+CogniWallet/
+│
+├── backend/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── routes/
+│   ├── scripts/
+│   ├── tests/
+│   ├── utils/
+│   ├── app.js
+│   ├── db.js
+│   ├── server.js
+│   └── package.json
+│
+├── frontend/
+│   └── Expense-tracker/
+│       ├── src/
+│       │   ├── components/
+│       │   ├── context/
+│       │   ├── pages/
+│       │   └── ...
+│       ├── package.json
+│       └── ...
+│
+├── docs/
+│   └── cogniwallet-architecture.svg
+│
+└── README.md
+```
+
+---
+
+## 🔐 Authentication & Security
+
+CogniWallet uses JWT-based authentication to protect user-specific resources.
+
+The authentication flow is:
+
+```text
+User Login / Registration
+          ↓
+Authentication Controller
+          ↓
+JWT Token
+          ↓
+Protected API Request
+          ↓
+JWT Middleware
+          ↓
+Authenticated User ID
+          ↓
+User-scoped Database Query
+```
+
+Passwords are hashed using `bcryptjs` before being stored in PostgreSQL.
+
+Protected financial data is queried using the authenticated user's ID so that users can only access their own financial information.
+
+---
+
+## 💡 Why PostgreSQL?
+
+CogniWallet uses PostgreSQL as its primary database because the application's financial data is highly relational.
+
+The main entities include:
+
+- Users
+- Transactions
+- Categories
+- Budgets
+- AI Insights
+
+PostgreSQL is used for financial analytics and aggregation queries such as:
+
+- Income and expense totals
+- Category-wise spending
+- Monthly spending analysis
+- Budget tracking
+- Financial trends
+
+The project was built to gain practical experience with PostgreSQL through a real-world full-stack application.
+
+---
+
+## 🤖 AI Features
+
+### 📅 Monthly Financial Summary
+
+Generates a financial summary using the user's income, expenses, savings rate, category-wise spending, and previous financial data.
+
+### 💡 Personalized Saving Tips
+
+Analyzes recent financial activity and generates practical saving suggestions based on the user's spending patterns.
+
+### 🚨 Budget Alerts
+
+Analyzes current spending against category budgets and generates budget-related alerts.
+
+### 💬 Financial Assistant
+
+Allows users to ask natural-language questions about their personal financial activity.
+
+Example questions:
+
+```text
+Why am I spending so much?
+
+Where am I spending the most?
+
+How can I save money?
+
+What changed since last month?
+```
+
+The backend retrieves the relevant financial data from PostgreSQL before sending structured context to the LLM.
+
+The AI is responsible for interpreting and explaining the financial data, while PostgreSQL remains the source of truth for the underlying financial records.
+
+---
+
+## 📄 License
+
+MIT License
