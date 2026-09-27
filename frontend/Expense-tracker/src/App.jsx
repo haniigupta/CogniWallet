@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions.jsx';
 import Categories from './pages/Categories.jsx';
 import Budgets from './pages/Budgets.jsx';
 import Insights from './pages/Insights.jsx';
+import Profile from './pages/Profile.jsx';
 
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Layout from './components/Layout.jsx';
@@ -68,6 +69,10 @@ const App = () => {
                 <Route
                     path="/insights"
                     element={<Insights />}
+                />
+                <Route
+                    path="/profile"
+                    element={<Profile />}
                 />
 
             </Route>
