@@ -247,3 +247,215 @@ export const generateInsight = async  ( req, res) => {
 
     }
 }
+
+export const askInsight = async (req, res) => {
+    const question = req.body?.question;
+
+    if (
+        typeof question !== 'string' ||
+        !question.trim() ||
+        question.trim().length > 500
+    ) {
+        return res.status(400).json({
+            message: 'Question must contain between 1 and 500 characters.',
+        });
+    }
+
+    try {
+        const userId = req.userId;
+
+        const result = await pool.query(
+            `
+            WITH monthly_totals AS (
+                SELECT
+                    COALESCE(
+                        SUM(amount) FILTER (
+                            WHERE type = 'income'
+                              AND transaction_date >= date_trunc('month', CURRENT_DATE)
+                              AND transaction_date < date_trunc('month', CURRENT_DATE)
+                                  + INTERVAL '1 month'
+                        ),
+                        0
+                    ) AS current_income,
+
+                    COALESCE(
+                        SUM(amount) FILTER (
+                            WHERE type = 'expense'
+                              AND transaction_date >= date_trunc('month', CURRENT_DATE)
+                              AND transaction_date < date_trunc('month', CURRENT_DATE)
+                                  + INTERVAL '1 month'
+                        ),
+                        0
+                    ) AS current_expenses,
+
+                    COALESCE(
+                        SUM(amount) FILTER (
+                            WHERE type = 'expense'
+                              AND transaction_date >= date_trunc('month', CURRENT_DATE)
+                                  - INTERVAL '1 month'
+                              AND transaction_date < date_trunc('month', CURRENT_DATE)
+                        ),
+                        0
+                    ) AS previous_expenses,
+
+                    COUNT(*) FILTER (
+                        WHERE type = 'expense'
+                          AND transaction_date >= date_trunc('month', CURRENT_DATE)
+                          AND transaction_date < date_trunc('month', CURRENT_DATE)
+                              + INTERVAL '1 month'
+                    ) AS current_expense_count,
+
+                    COUNT(*) FILTER (
+                        WHERE type = 'expense'
+                          AND transaction_date >= date_trunc('month', CURRENT_DATE)
+                              - INTERVAL '1 month'
+                          AND transaction_date < date_trunc('month', CURRENT_DATE)
+                    ) AS previous_expense_count
+
+                FROM transactions
+                WHERE user_id = $1
+                  AND transaction_date >= date_trunc('month', CURRENT_DATE)
+                      - INTERVAL '1 month'
+                  AND transaction_date < date_trunc('month', CURRENT_DATE)
+                      + INTERVAL '1 month'
+            ),
+
+            category_breakdown AS (
+                SELECT
+                    COALESCE(c.name, 'Uncategorized') AS category,
+                    SUM(t.amount) AS amount,
+                    COUNT(*) AS transaction_count
+                FROM transactions t
+                LEFT JOIN categories c
+                    ON c.id = t.category_id
+                WHERE t.user_id = $1
+                  AND t.type = 'expense'
+                  AND t.transaction_date >= date_trunc('month', CURRENT_DATE)
+                  AND t.transaction_date < date_trunc('month', CURRENT_DATE)
+                      + INTERVAL '1 month'
+                GROUP BY COALESCE(c.name, 'Uncategorized')
+                ORDER BY amount DESC
+            ),
+
+            previous_category_breakdown AS (
+                SELECT
+                    COALESCE(c.name, 'Uncategorized') AS category,
+                    SUM(t.amount) AS amount
+                FROM transactions t
+                LEFT JOIN categories c
+                    ON c.id = t.category_id
+                WHERE t.user_id = $1
+                  AND t.type = 'expense'
+                  AND t.transaction_date >= date_trunc('month', CURRENT_DATE)
+                      - INTERVAL '1 month'
+                  AND t.transaction_date < date_trunc('month', CURRENT_DATE)
+                GROUP BY COALESCE(c.name, 'Uncategorized')
+                ORDER BY amount DESC
+            )
+
+            SELECT
+                m.*,
+                (
+                    SELECT COALESCE(json_agg(cb), '[]'::json)
+                    FROM category_breakdown cb
+                ) AS categories,
+                (
+                    SELECT COALESCE(json_agg(pcb), '[]'::json)
+                    FROM previous_category_breakdown pcb
+                ) AS previous_categories
+            FROM monthly_totals m
+            `,
+            [userId]
+        );
+
+        const row = result.rows[0];
+
+        const currentIncome = Number(row.current_income || 0);
+        const currentExpenses = Number(row.current_expenses || 0);
+        const previousExpenses = Number(row.previous_expenses || 0);
+
+        const currentExpenseCount = Number(
+            row.current_expense_count || 0
+        );
+
+        const previousExpenseCount = Number(
+            row.previous_expense_count || 0
+        );
+
+        const categories = (row.categories || []).map((item) => ({
+            category: item.category,
+            amount: Number(item.amount || 0),
+            transactionCount: Number(item.transaction_count || 0),
+        }));
+
+        const previousCategories = (
+            row.previous_categories || []
+        ).map((item) => ({
+            category: item.category,
+            amount: Number(item.amount || 0),
+        }));
+
+        const financialData = {
+            period: new Date().toISOString().slice(0, 7),
+            currentMonth: {
+                income: currentIncome,
+                expenses: currentExpenses,
+                expenseTransactionCount: currentExpenseCount,
+                categories,
+            },
+            previousMonth: {
+                expenses: previousExpenses,
+                expenseTransactionCount: previousExpenseCount,
+                categories: previousCategories,
+            },
+            expenseChangePercent:
+                previousExpenseCount > 0 && previousExpenses > 0
+                    ? Number(
+                        (
+                            ((currentExpenses - previousExpenses) /
+                                previousExpenses) *
+                            100
+                        ).toFixed(1)
+                    )
+                    : null,
+            comparisonNote:
+                'The current month may be incomplete. Do not compare ' +
+                'a partial month with a complete previous month as if ' +
+                'they cover equal periods.',
+        };
+
+        const currency = await getUserCurrency(userId);
+
+        if (
+            currentExpenseCount === 0 &&
+            previousExpenseCount === 0 &&
+            currentIncome === 0
+        ) {
+            return res.json({
+                answer:
+                    'I do not have enough recorded financial data yet ' +
+                    'to analyse your spending. Add some transactions ' +
+                    'and I can help identify patterns.',
+                suggestions: [
+                    'Add your income and expenses to CogniWallet.',
+                    'Assign categories to expenses for more useful analysis.',
+                ],
+            });
+        }
+
+        const answer = await askFinancialAssistant({
+            question: question.trim(),
+            financialData,
+            currency,
+        });
+
+        return res.json(answer);
+    } catch (error) {
+        console.error('askInsight error:', error);
+
+        return res.status(500).json({
+            message:
+                'Unable to answer your question right now. Please try again.',
+        });
+    }
+};
