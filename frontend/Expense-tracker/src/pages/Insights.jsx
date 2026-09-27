@@ -16,6 +16,7 @@ import EmptyState from '../components/EmptyState.jsx';
 import Spinner from '../components/Spinner.jsx';
 import InsightCard from '../components/InsightCard.jsx';
 import KpiCard from '../components/KpiCard.jsx';
+import FinancialAssistant from '../components/FinancialAssistant.jsx';
 
 const ActionCard = ({ title, description, icon: Icon, accentGradient, accentText, onClick, generating, lastGenerated }) => (
     <button
@@ -117,6 +118,8 @@ const Insights = () => {
                 </p>
             </div>
 
+            <FinancialAssistant />
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard
                     label="Insights generated"
@@ -132,7 +135,7 @@ const Insights = () => {
                 />
                 <KpiCard
                     label="Potential savings"
-                    value={stats.potentialSavings > 0 ? `$${stats.potentialSavings.toFixed(0)}/mo` : '—'}
+                    value={stats.potentialSavings > 0 ? `₹${stats.potentialSavings.toFixed(0)}/mo` : '—'}
                     icon={Wallet}
                     accent="orange"
                 />
