@@ -35,6 +35,7 @@ export const API_PATHS = {
     INSIGHTS: {
         LIST: '/insights',
         GENERATE: '/insights/generate',
+        ASK: '/insights/ask',
     },
 };
 

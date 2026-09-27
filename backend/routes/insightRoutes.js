@@ -1,5 +1,5 @@
 import express from 'express'
-import { getInsights, generateInsight} from '../controllers/insightController.js'
+import { getInsights, generateInsight, askInsight} from '../controllers/insightController.js'
 import { protect } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
@@ -7,5 +7,6 @@ router.use(protect)
 
 router.get('/', getInsights)
 router.post('/generate', generateInsight)
+router.post('/ask', askInsight)
 
 export default router; 
