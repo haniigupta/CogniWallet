@@ -2,7 +2,8 @@ import pool from '../db.js'
 import {
     generateMonthlyInsight,
     generateBudgetAlert,
-    generateSavingTips
+    generateSavingTips,
+    askFinancialAssistant
 } from '../utils/groq.js'
 
 const getUserCurrency = async  (userId) => {
